@@ -1,0 +1,33 @@
+# Example Template: Query nodes by label
+#
+# A simple template demonstrating basic node queries with limit.
+# Copy this file to your templates directory and customize.
+
+name: nodes_by_label
+description: Query nodes by label with optional limit and property filter
+version: "1.0"
+
+parameters:
+  label:
+    type: string
+    required: true
+    description: Node label to query (e.g., Person, Product, Order)
+
+  property:
+    type: string
+    default: ""
+    description: Optional property to return (leave empty for all properties)
+
+  limit:
+    type: integer
+    default: 100
+    description: Maximum number of nodes to return
+
+query: |
+  MATCH (n:${label})
+  RETURN n
+  LIMIT $limit
+
+# Usage examples:
+#   neo4j template nodes_by_label --label=Person
+#   neo4j template nodes_by_label --label=Product --limit=50

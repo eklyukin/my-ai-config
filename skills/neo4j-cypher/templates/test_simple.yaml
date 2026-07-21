@@ -1,0 +1,15 @@
+name: test_simple
+description: Simple test template
+version: "1.0"
+
+parameters:
+  limit:
+    type: integer
+    required: false
+    default: 5
+    description: Number of results to return
+
+query: |
+  MATCH (n)
+  RETURN labels(n) as labels
+  LIMIT $limit

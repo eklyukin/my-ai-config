@@ -1,0 +1,54 @@
+# Example Template: Relationship Traversal
+#
+# Query nodes connected by relationships with configurable depth.
+# Useful for exploring graph connections and finding related entities.
+
+name: relationship_query
+description: Find nodes connected by a specific relationship type
+version: "1.0"
+
+parameters:
+  from_label:
+    type: string
+    required: true
+    description: Label of the source node
+
+  relationship:
+    type: string
+    required: true
+    description: Relationship type to traverse (e.g., KNOWS, WORKS_FOR, CONTAINS)
+
+  to_label:
+    type: string
+    required: true
+    description: Label of the target node
+
+  direction:
+    type: string
+    default: "outgoing"
+    description: Relationship direction (outgoing, incoming, both)
+
+  min_depth:
+    type: integer
+    default: 1
+    description: Minimum traversal depth
+
+  max_depth:
+    type: integer
+    default: 1
+    description: Maximum traversal depth
+
+  limit:
+    type: integer
+    default: 100
+    description: Maximum number of results
+
+query: |
+  MATCH (a:${from_label})-[:${relationship}*${min_depth}..${max_depth}]->(b:${to_label})
+  RETURN a, b
+  LIMIT $limit
+
+# Usage examples:
+#   neo4j template relationship_query --from_label=Person --relationship=KNOWS --to_label=Person
+#   neo4j template relationship_query --from_label=Employee --relationship=REPORTS_TO --to_label=Employee --max_depth=3
+#   neo4j template relationship_query --from_label=Order --relationship=CONTAINS --to_label=Product

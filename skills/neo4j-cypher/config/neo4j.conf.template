@@ -1,0 +1,131 @@
+# ============================================================================
+# Neo4j Skill Configuration Template
+# ============================================================================
+# Copy this file to: ~/.claude/skills/neo4j/config/neo4j.conf
+# Environment variables override these settings
+# ============================================================================
+
+# ============================================================================
+# CONNECTION SETTINGS (REQUIRED)
+# ============================================================================
+
+# Neo4j connection URI
+# Formats: bolt://host:7687, neo4j://host:7687, neo4j+s://host:7687 (TLS)
+# Reason: Skill checks NEO4J_URI first, then NEO4J_URL as fallback
+NEO4J_URI="bolt://localhost:7687"
+
+# Database credentials
+# Reason: Required for authentication to Neo4j database
+NEO4J_USERNAME="neo4j"
+NEO4J_PASSWORD=""  # Set via environment variable for security
+
+# Target database name
+# Reason: Neo4j supports multiple databases; specify which to query
+# Default: "neo4j" (default database in most installations)
+NEO4J_DATABASE="neo4j"
+
+# ============================================================================
+# SCHEMA SETTINGS
+# ============================================================================
+
+# Sample size for schema inspection
+# Reason: APOC meta.schema samples nodes to infer schema
+#         Larger = more accurate but slower
+#         Smaller = faster but may miss rare patterns
+# Recommended: 100 for production (balances speed/accuracy)
+NEO4J_SCHEMA_SAMPLE_SIZE="100"
+
+# ============================================================================
+# OPERATION SETTINGS
+# ============================================================================
+
+# Default query timeout in seconds
+# Reason: Prevents hung queries from blocking operations
+# Note: Individual operations can override with --timeout flag
+DEFAULT_TIMEOUT="10"
+
+# Maximum retry attempts for transient errors
+# Reason: Connection issues, timeouts are automatically retried
+#         5 retries with exponential backoff (2, 4, 8, 16, 32s)
+MAX_RETRIES="5"
+
+# ============================================================================
+# GCP SECRET MANAGER INTEGRATION
+# ============================================================================
+
+# Enable GCP Secret Manager for credentials
+# Reason: Securely fetch credentials from cloud instead of hardcoding
+# Values: "auto" (use GCP if env vars empty), "true" (always), "false" (never)
+# Default: "auto"
+USE_GCP_SECRETS="auto"
+
+# GCP project ID containing secrets
+# Reason: Required to locate secrets in Secret Manager
+# IMPORTANT: Replace with your organization's GCP project ID
+# Example: "your-org-project-id"
+GCP_PROJECT_ID=""
+
+# Service account for impersonation (auto-detected from username if empty)
+# Reason: Corporate users impersonate service accounts to access secrets
+# Format: <service-account-name>@<project-id>.iam.gserviceaccount.com
+# Leave empty to auto-detect from whoami
+# Example: "npc-user-a-evseev@your-project-id.iam.gserviceaccount.com"
+GCP_SERVICE_ACCOUNT=""
+
+# Service account prefix for auto-detection
+# Reason: Different organizations use different naming patterns
+# Default: "xenia-npc" (generates: xenia-npc-<username>@<project-id>.iam.gserviceaccount.com)
+# Example: "myorg" (generates: myorg-<username>@<project-id>.iam.gserviceaccount.com)
+GCP_SERVICE_ACCOUNT_PREFIX="xenia-npc"
+
+# Secret naming pattern components
+# Reason: Allows customization of secret names to match your organization's pattern
+# Default pattern: {base_prefix}-{prefix}-{type}-{suffix} (shared) or {base_prefix}-user-{username}-{prefix}-{type}-{suffix} (personal)
+#   URI secret:      xenia-npc-neo4j-uri-prod
+#   Username secret: xenia-npc-user-<username>-neo4j-username-prod
+#   Password secret: xenia-npc-user-<username>-neo4j-password-prod
+GCP_SECRET_BASE_PREFIX="xenia-npc"
+GCP_SECRET_PREFIX="neo4j"
+GCP_SECRET_SUFFIX="prod"
+
+# Path to gcloud-cli skill (auto-detected if empty)
+# Reason: Points to scripts that fetch secrets from GCP
+# Only set if gcloud-cli skill is in non-standard location
+# Auto-detect locations:
+#   - $HOME/.claude/skills/gcloud-cli/
+#   - $(dirname $SKILL_DIR)/google/gcloud-cli/
+GCLOUD_CLI_SKILL_DIR=""
+
+# GCP Secret Names (auto-detected from username, documented for reference)
+# Shared secret (all employees):
+#   - xenia-npc-neo4j-uri-prod → NEO4J_URI
+# Personal secrets (owner only):
+#   - xenia-npc-user-<username>-neo4j-username-prod → NEO4J_USERNAME
+#   - xenia-npc-user-<username>-neo4j-password-prod → NEO4J_PASSWORD
+# Username sanitization: dots (.) → hyphens (-)
+#   Example: a.evseev@xsolla.com → a-evseev
+
+# ============================================================================
+# LOGGING SETTINGS
+# ============================================================================
+
+# Enable debug logging
+# Reason: Detailed logs for troubleshooting
+# Values: "true" or "false"
+DEBUG="false"
+
+# Log file location (when DEBUG=true)
+# Reason: Captures debug output for analysis
+LOG_FILE="./neo4j-operation.log"
+
+# ============================================================================
+# TEMPLATE SETTINGS
+# ============================================================================
+
+# Template discovery locations (searched in order, first match wins):
+# 1. Project templates: .claude/neo4j-templates/
+# 2. Skill templates:   <skill>/templates/
+# 3. User templates:    ~/.claude/neo4j-templates/
+#
+# To create custom templates, add YAML files to any of these locations.
+# See templates/README.md for template format documentation.

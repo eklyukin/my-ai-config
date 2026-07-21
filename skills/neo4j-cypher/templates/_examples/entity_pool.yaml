@@ -1,0 +1,57 @@
+# Example Template: Filtered Entity Pool
+#
+# Query entities with status filtering and exclusion support.
+# Useful for getting a filtered list of nodes for batch processing.
+
+name: entity_pool
+description: Get active entities with optional exclusion filters
+version: "1.0"
+
+parameters:
+  label:
+    type: string
+    required: true
+    description: Node label to query (e.g., Employee, Customer, Account)
+
+  status_property:
+    type: string
+    default: "status"
+    description: Property name that holds the status value
+
+  status_value:
+    type: string
+    default: "Active"
+    description: Value to match for active entities
+
+  exclude_property:
+    type: string
+    default: ""
+    description: Property to use for exclusion filtering
+
+  exclude_values:
+    type: array
+    default: []
+    description: Values to exclude (JSON array)
+
+  order_by:
+    type: string
+    default: "name"
+    description: Property to sort results by
+
+  limit:
+    type: integer
+    default: 1000
+    description: Maximum number of entities to return
+
+query: |
+  MATCH (n:${label})
+  WHERE n.${status_property} = $status_value
+    AND NOT COALESCE(n.${exclude_property}, '') IN $exclude_values
+  RETURN n
+  ORDER BY n.${order_by}
+  LIMIT $limit
+
+# Usage examples:
+#   neo4j template entity_pool --label=Employee
+#   neo4j template entity_pool --label=Customer --status_value=Premium
+#   neo4j template entity_pool --label=Employee --exclude_property=department --exclude_values='["HR", "Legal"]'
