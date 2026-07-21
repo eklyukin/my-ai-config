@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# Runs OpenAI's migrate-to-codex Codex skill against ~/.claude/ and merges the
+# result into ~/.codex/, then repairs the two things that migrator overwrites
+# wholesale instead of merging: ~/AGENTS.md and ~/.codex/config.toml.
+#
+# Why the repair step exists:
+# - ~/AGENTS.md carries a corporate-managed Neuronet code-search block (same
+#   role as ~/.claude/rules/neo4j-graph-first.md — pushed by MDM, not owned by
+#   this repo). The migrator picks CLAUDE.md as the instruction source and
+#   overwrites AGENTS.md with CLAUDE.md's shorter, Claude-only version of that
+#   block, which points at a path (rules/neo4j-graph-first.md) Codex can't see.
+# - ~/.codex/config.toml is rebuilt from scratch from Claude's settings on
+#   every run, so it drops Codex-native `[projects."..."]` trust levels and
+#   can write an invalid `model = "..."` (a Claude model alias like "sonnet"
+#   isn't a real Codex model id).
+#
+# Safe to re-run: idempotent snapshot-then-restore, same pattern as install.sh.
+set -euo pipefail
+
+CODEX_HOME="${HOME}/.codex"
+CLAUDE_HOME="${HOME}/.claude"
+AGENTS_MD="${HOME}/AGENTS.md"
+CONFIG_TOML="${CODEX_HOME}/config.toml"
+
+MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
+if [ -z "${MIGRATOR}" ]; then
+  echo "ERROR: migrate-to-codex.py not found under ${CODEX_HOME}/vendor_imports/skills/ — is the migrate-to-codex Codex skill installed?" >&2
+  exit 1
+fi
+
+# --dry-run/--scan-only/--plan/--doctor/--validate-target don't touch disk —
+# skip the repair step so it doesn't rewrite files for a no-op inspection run.
+read_only=false
+for arg in "$@"; do
+  case "${arg}" in
+    --dry-run|--scan-only|--plan|--doctor|--validate-target*) read_only=true ;;
+  esac
+done
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "${tmp_dir}"' EXIT
+
+# --- snapshot what the migrator does not own, before it overwrites anything ---
+projects_snapshot="${tmp_dir}/projects.toml"
+: > "${projects_snapshot}"
+if [ -f "${CONFIG_TOML}" ]; then
+  awk '
+    /^\[projects\./ { in_block=1 }
+    in_block && /^\[/ && !/^\[projects\./ { in_block=0 }
+    in_block { print }
+  ' "${CONFIG_TOML}" > "${projects_snapshot}"
+fi
+
+neo4j_block_snapshot="${tmp_dir}/neo4j-block.md"
+: > "${neo4j_block_snapshot}"
+if [ -f "${AGENTS_MD}" ] && grep -q "neo4j-graph-first:start" "${AGENTS_MD}"; then
+  sed -n '/neo4j-graph-first:start/,/neo4j-graph-first:end/p' "${AGENTS_MD}" > "${neo4j_block_snapshot}"
+fi
+
+[ -f "${AGENTS_MD}" ] && cp -f "${AGENTS_MD}" "${AGENTS_MD}.pre-codex-migration.bak"
+[ -f "${CONFIG_TOML}" ] && cp -f "${CONFIG_TOML}" "${CONFIG_TOML}.pre-codex-migration.bak"
+
+# --- run the real migration ---
+python3 "${MIGRATOR}" --source "${CLAUDE_HOME}/" --target "${CODEX_HOME}/" "$@"
+
+if [ "${read_only}" = true ]; then
+  exit 0
+fi
+
+# --- repair AGENTS.md: restore the cross-agent-managed neo4j block verbatim ---
+if [ -s "${neo4j_block_snapshot}" ] && [ -f "${AGENTS_MD}" ]; then
+  python3 - "${AGENTS_MD}" "${neo4j_block_snapshot}" <<'PYEOF'
+import re
+import sys
+
+agents_path, block_path = sys.argv[1], sys.argv[2]
+agents = open(agents_path).read()
+block = open(block_path).read().rstrip("\n")
+pattern = re.compile(r"<!-- neo4j-graph-first:start.*?neo4j-graph-first:end -->", re.DOTALL)
+if pattern.search(agents):
+    agents = pattern.sub(lambda _: block, agents, count=1)
+else:
+    agents = agents.rstrip("\n") + "\n\n" + block + "\n"
+agents = re.sub(
+    r"\n## MANUAL MIGRATION REQUIRED\n\nClaude-only instructions were copied into `AGENTS\.md`\. Remove Claude hooks, slash commands, and subagent assumptions before relying on this file in Codex\.\n",
+    "\n",
+    agents,
+)
+open(agents_path, "w").write(agents)
+PYEOF
+  echo "repaired: ${AGENTS_MD} (restored corporate neo4j-graph-first block)"
+fi
+
+# --- repair config.toml: re-add project trust levels, drop invalid model id ---
+if [ -f "${CONFIG_TOML}" ]; then
+  python3 - "${CONFIG_TOML}" "${projects_snapshot}" <<'PYEOF'
+import re
+import sys
+
+config_path, projects_path = sys.argv[1], sys.argv[2]
+config = open(config_path).read()
+config = re.sub(r'^model\s*=\s*".*"\n', "", config, flags=re.MULTILINE)
+projects = open(projects_path).read().strip()
+if projects:
+    marker = 'personality = "friendly"\n'
+    if marker in config:
+        config = config.replace(marker, marker + "\n" + projects + "\n", 1)
+    else:
+        config = projects + "\n\n" + config
+open(config_path, "w").write(config)
+PYEOF
+  echo "repaired: ${CONFIG_TOML} (restored [projects] trust levels, dropped Claude model alias)"
+fi
+
+echo "Done. Review ${CODEX_HOME}/migrate-to-codex-report.txt for remaining manual-review items."

@@ -20,6 +20,16 @@ Remove everything install.sh set up:
 bash uninstall.sh
 ```
 
+## Codex compatibility
+
+```bash
+bash install-codex.sh
+```
+
+Runs OpenAI's `migrate-to-codex` Codex skill against `~/.claude/` and merges skills, MCP servers, and hooks into `~/.codex/`. That migrator rebuilds `~/AGENTS.md` and `~/.codex/config.toml` from scratch on every run, so the script also repairs what it overwrites: it restores the corporate-managed Neuronet code-search block in `~/AGENTS.md` (not owned by this repo, same as `~/.claude/rules/neo4j-graph-first.md`) and the `[projects."..."]` trust levels in `~/.codex/config.toml`, and drops any invalid Claude model alias (e.g. `sonnet`) the migrator wrote. Safe to re-run. Requires the `migrate-to-codex` Codex skill to already be installed (`~/.codex/vendor_imports/skills/`).
+
+Codex has no equivalent of `agents/` (subagents) or this repo's `hooks/` — those aren't migrated.
+
 ## What this repo does NOT own
 
 - `~/.claude/settings.json` — managed by the corporate MDM mechanism (hooks, env). Not touched by this install.sh.
