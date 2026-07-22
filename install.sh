@@ -2,15 +2,26 @@
 # Symlinks this repo's rules/skills/agents/commands/hooks into ~/.claude/.
 # Idempotent: re-running always converges ~/.claude/* to match this repo.
 #
-# Never touches ~/.claude/settings.json or ~/.claude/rules/neo4j-graph-first.md —
-# those are managed by the corporate MDM push, not this repo.
+# Mostly never touches ~/.claude/settings.json or ~/.claude/rules/neo4j-graph-first.md —
+# those are managed by the corporate MDM push, not this repo. The one scoped exception:
+# this repo's own hooks/*.sh scripts need a hooks.<Event> entry in settings.json to
+# actually run, so we merge just those entries in (see "register hook triggers" below) —
+# every other key in settings.json is left untouched.
 set -euo pipefail
 shopt -s nullglob
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="${HOME}/.claude"
 MANIFEST="${CLAUDE_DIR}/.my-ai-config-manifest"
+SETTINGS_JSON="${CLAUDE_DIR}/settings.json"
 MANAGED_DIRS=(rules skills agents commands hooks)
+
+# hooks/<script>=<Event> it needs registered under in settings.json. Plain array,
+# not an associative one — the default bash on macOS (3.2) predates declare -A.
+# Add an entry here whenever a new hook script needs to actually fire.
+HOOK_EVENTS=(
+  "session-start-claude-md-refactor.sh=SessionStart"
+)
 
 mkdir -p "${CLAUDE_DIR}"
 
@@ -65,3 +76,33 @@ done
 printf '%s\n' "${installed[@]:-}" > "${MANIFEST}"
 
 echo "Done. ${#installed[@]} item(s) linked into ${CLAUDE_DIR}."
+
+# --- register this repo's hook scripts under their required event in settings.json ---
+# Scoped, idempotent merge: only adds a hooks.<Event> entry for scripts in HOOK_EVENTS
+# whose command isn't already registered under that event. Every other key in
+# settings.json — permissions, env, MDM-pushed hooks, etc. — is left byte-for-byte alone.
+if command -v jq >/dev/null 2>&1; then
+  if [ ! -f "${SETTINGS_JSON}" ]; then
+    echo '{}' > "${SETTINGS_JSON}"
+  fi
+  for entry in "${HOOK_EVENTS[@]}"; do
+    script="${entry%%=*}"
+    event="${entry#*=}"
+    hook_path="${CLAUDE_DIR}/hooks/${script}"
+    [ -e "${hook_path}" ] || continue   # not installed this run (e.g. removed from repo)
+
+    already_registered="$(jq -r --arg event "${event}" --arg cmd "${hook_path}" '
+      [(.hooks[$event] // [])[] | .hooks[]? | select(.type == "command" and .command == $cmd)] | length > 0
+    ' "${SETTINGS_JSON}")"
+
+    if [ "${already_registered}" != "true" ]; then
+      tmp_settings="$(mktemp)"
+      jq --arg event "${event}" --arg cmd "${hook_path}" '
+        .hooks[$event] = ((.hooks[$event] // []) + [{"hooks": [{"type": "command", "command": $cmd}]}])
+      ' "${SETTINGS_JSON}" > "${tmp_settings}" && mv "${tmp_settings}" "${SETTINGS_JSON}"
+      echo "registered hook: ${event} -> ${hook_path} (in ${SETTINGS_JSON})"
+    fi
+  done
+else
+  echo "WARN: jq not found — skipping hooks.<Event> registration in ${SETTINGS_JSON}; run manually or install jq and re-run" >&2
+fi
