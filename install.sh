@@ -16,6 +16,9 @@ MANIFEST="${CLAUDE_DIR}/.my-ai-config-manifest"
 SETTINGS_JSON="${CLAUDE_DIR}/settings.json"
 MANAGED_DIRS=(rules skills agents commands hooks)
 
+# MCP servers owned by this repo and installed globally for Claude Code.
+# install-codex.sh migrates them into Codex and adds Codex Desktop computer-use.
+
 # hooks/<script>=<Event> it needs registered under in settings.json. Plain array,
 # not an associative one — the default bash on macOS (3.2) predates declare -A.
 # Add an entry here whenever a new hook script needs to actually fire.
@@ -76,6 +79,24 @@ done
 printf '%s\n' "${installed[@]:-}" > "${MANIFEST}"
 
 echo "Done. ${#installed[@]} item(s) linked into ${CLAUDE_DIR}."
+
+# --- install this repo's global MCP servers for Claude Code ---
+# These entries are intentionally user-scoped so they are available in every
+# project. Replacing only the named entries keeps the operation idempotent and
+# leaves all unrelated MCP configuration untouched.
+if command -v claude >/dev/null 2>&1; then
+  install_global_mcp() {
+    name="$1"
+    shift
+    claude mcp remove --scope user "${name}" >/dev/null 2>&1 || true
+    claude mcp add --scope user "${name}" -- "$@"
+  }
+
+  install_global_mcp playwright npx -y @playwright/mcp@latest
+  install_global_mcp chrome-devtools npx -y chrome-devtools-mcp@latest
+else
+  echo "WARN: claude CLI not found — skipping global Claude MCP installation" >&2
+fi
 
 # --- register this repo's hook scripts under their required event in settings.json ---
 # Scoped, idempotent merge: only adds a hooks.<Event> entry for scripts in HOOK_EVENTS

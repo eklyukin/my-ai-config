@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs OpenAI's migrate-to-codex Codex skill against ~/.claude/ and merges the
-# result into ~/.codex/, then repairs the two things that migrator overwrites
+# result into ~/.codex/, then repairs the things that migrator overwrites
 # wholesale instead of merging: ~/AGENTS.md and ~/.codex/config.toml.
 #
 # Why the repair step exists:
@@ -21,6 +21,8 @@ CODEX_HOME="${HOME}/.codex"
 CLAUDE_HOME="${HOME}/.claude"
 AGENTS_MD="${HOME}/AGENTS.md"
 CONFIG_TOML="${CODEX_HOME}/config.toml"
+LOCAL_CONTEXT_RULE="${CLAUDE_HOME}/rules/local-context.md"
+COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
 
 MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
 if [ -z "${MIGRATOR}" ]; then
@@ -49,6 +51,18 @@ if [ -f "${CONFIG_TOML}" ]; then
     in_block && /^\[/ && !/^\[projects\./ { in_block=0 }
     in_block { print }
   ' "${CONFIG_TOML}" > "${projects_snapshot}"
+fi
+
+# Preserve Codex-native MCP servers that have no Claude equivalent. The
+# migrator rebuilds config.toml from Claude and would otherwise delete them.
+mcp_snapshot="${tmp_dir}/mcp-servers.toml"
+: > "${mcp_snapshot}"
+if [ -f "${CONFIG_TOML}" ]; then
+  awk '
+    /^\[mcp_servers\./ { in_block=1 }
+    in_block && /^\[/ && !/^\[mcp_servers\./ { in_block=0 }
+    in_block { print }
+  ' "${CONFIG_TOML}" > "${mcp_snapshot}"
 fi
 
 neo4j_block_snapshot="${tmp_dir}/neo4j-block.md"
@@ -91,6 +105,36 @@ PYEOF
   echo "repaired: ${AGENTS_MD} (restored corporate neo4j-graph-first block)"
 fi
 
+# --- install the shared _local/ discovery rule for Codex ---
+# Claude loads this file from ~/.claude/rules; Codex needs the same content in
+# its global AGENTS.md. Replace only this repo's marked block.
+if [ -f "${LOCAL_CONTEXT_RULE}" ] && [ -f "${AGENTS_MD}" ]; then
+  python3 - "${AGENTS_MD}" "${LOCAL_CONTEXT_RULE}" <<'PYEOF'
+import re
+import sys
+
+agents_path, rule_path = sys.argv[1], sys.argv[2]
+agents = open(agents_path).read().rstrip("\n")
+rule = open(rule_path).read().strip()
+block = (
+    "<!-- my-ai-config-local-context:start -->\n"
+    + rule
+    + "\n<!-- my-ai-config-local-context:end -->"
+)
+pattern = re.compile(
+    r"\n?<!-- my-ai-config-local-context:start -->.*?"
+    r"<!-- my-ai-config-local-context:end -->",
+    re.DOTALL,
+)
+if pattern.search(agents):
+    agents = pattern.sub("\n\n" + block, agents, count=1)
+else:
+    agents += "\n\n" + block
+open(agents_path, "w").write(agents.strip() + "\n")
+PYEOF
+  echo "repaired: ${AGENTS_MD} (installed _local/ discovery rule)"
+fi
+
 # --- repair config.toml: re-add project trust levels, drop invalid model id ---
 if [ -f "${CONFIG_TOML}" ]; then
   python3 - "${CONFIG_TOML}" "${projects_snapshot}" <<'PYEOF'
@@ -110,6 +154,40 @@ if projects:
 open(config_path, "w").write(config)
 PYEOF
   echo "repaired: ${CONFIG_TOML} (restored [projects] trust levels, dropped Claude model alias)"
+fi
+
+# Re-add only MCP servers that the Claude migration did not produce. Existing
+# migrated names win; Codex-only entries such as node_repl remain available.
+if [ -s "${mcp_snapshot}" ] && [ -f "${CONFIG_TOML}" ]; then
+  python3 - "${CONFIG_TOML}" "${mcp_snapshot}" <<'PYEOF'
+import re
+import sys
+
+config_path, snapshot_path = sys.argv[1], sys.argv[2]
+config = open(config_path).read().rstrip("\n")
+snapshot = open(snapshot_path).read()
+starts = list(re.finditer(r'^\[mcp_servers\.([^].]+)\]\s*$', snapshot, re.MULTILINE))
+missing = []
+for index, match in enumerate(starts):
+    end = starts[index + 1].start() if index + 1 < len(starts) else len(snapshot)
+    name = match.group(1)
+    if not re.search(r'^\[mcp_servers\.' + re.escape(name) + r'\]\s*$', config, re.MULTILINE):
+        missing.append(snapshot[match.start():end].strip("\n"))
+if missing:
+    config += "\n\n" + "\n\n".join(missing)
+open(config_path, "w").write(config + "\n")
+PYEOF
+  echo "repaired: ${CONFIG_TOML} (restored Codex-native MCP servers missing from Claude migration)"
+fi
+
+# Claude reserves the name "computer-use", so this Codex Desktop MCP cannot be
+# stored in Claude's user configuration and migrated. Register it directly in
+# Codex instead. The absolute command keeps it globally usable from any cwd.
+if [ -x "${COMPUTER_USE_CLIENT}" ]; then
+  codex mcp remove computer-use >/dev/null 2>&1 || true
+  codex mcp add computer-use -- "${COMPUTER_USE_CLIENT}" mcp
+else
+  echo "WARN: Codex Desktop computer-use client not found — skipping global computer-use MCP" >&2
 fi
 
 echo "Done. Review ${CODEX_HOME}/migrate-to-codex-report.txt for remaining manual-review items."

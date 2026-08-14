@@ -49,6 +49,24 @@ When the user asks to redesign (not build from scratch), adapt the workflow:
 4. **Don't break functionality**: After visual changes, run `tsc --noEmit` and the build tool (Vite, Webpack, etc.) to catch regressions. Visual-only changes should never break types or builds.
 5. **Inline styles vs utility classes**: Never use Tailwind-only utilities (like `ring-*`, `divide-*`) as CSS properties in inline `style={{}}` objects — they don't exist in CSS. Use `boxShadow` or `border` equivalents instead.
 
+## Browser and Design Verification
+
+When implementing or changing a user interface:
+
+1. Use Playwright MCP and Chrome DevTools MCP when they are connected and available.
+2. Prefer the user's already-open Google Chrome session. Open the tested page in a new tab, or explicitly ask which existing tab to use when the choice matters.
+3. Do not launch a separate isolated browser profile when the existing Chrome session provides the required authentication or application state.
+4. After making UI changes, open the affected screen and inspect its rendered state. Use screenshots and browser diagnostics to check layout, overflow, spacing, responsive behavior, console errors, and failed network requests.
+5. When a Figma design exists and Figma MCP is connected, inspect the relevant design through Figma MCP and compare the implementation against it, including all supplied breakpoints and states.
+6. Do not consider visual verification complete based only on a successful build, test run, or opened URL. Visually inspect the rendered result.
+7. If a required MCP server is unavailable, report the limitation and use the closest available verification method.
+
+### Tool Priority
+
+- Use Chrome DevTools MCP for the user's already-open Chrome session and authenticated pages.
+- Use Playwright MCP for repeatable scenarios, responsive viewport checks, and automated UI verification.
+- Use Figma MCP to inspect and compare against the source design when a Figma layout exists and the server is connected.
+
 ## Brand Alignment
 
 When an app has an existing design system or brand guidelines (e.g., DESIGN.md, style guide):
