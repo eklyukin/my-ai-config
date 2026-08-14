@@ -65,6 +65,19 @@ if [ -f "${CONFIG_TOML}" ]; then
   ' "${CONFIG_TOML}" > "${mcp_snapshot}"
 fi
 
+# Preserve Codex app/runtime configuration that has no Claude equivalent.
+# The migrator rebuilds config.toml and otherwise drops installed marketplaces,
+# enabled plugins, Codex feature flags, and the shell environment policy.
+codex_native_snapshot="${tmp_dir}/codex-native.toml"
+: > "${codex_native_snapshot}"
+if [ -f "${CONFIG_TOML}" ]; then
+  awk '
+    /^\[features\]$/ || /^\[marketplaces\./ || /^\[plugins\./ || /^\[shell_environment_policy\]$/ { in_block=1 }
+    in_block && /^\[/ && !/^\[features\]$/ && !/^\[marketplaces\./ && !/^\[plugins\./ && !/^\[shell_environment_policy\]$/ { in_block=0 }
+    in_block { print }
+  ' "${CONFIG_TOML}" > "${codex_native_snapshot}"
+fi
+
 neo4j_block_snapshot="${tmp_dir}/neo4j-block.md"
 : > "${neo4j_block_snapshot}"
 if [ -f "${AGENTS_MD}" ] && grep -q "neo4j-graph-first:start" "${AGENTS_MD}"; then
@@ -178,6 +191,29 @@ if missing:
 open(config_path, "w").write(config + "\n")
 PYEOF
   echo "repaired: ${CONFIG_TOML} (restored Codex-native MCP servers missing from Claude migration)"
+fi
+
+# Restore Codex-native sections absent from the Claude-generated config.
+if [ -s "${codex_native_snapshot}" ] && [ -f "${CONFIG_TOML}" ]; then
+  python3 - "${CONFIG_TOML}" "${codex_native_snapshot}" <<'PYEOF'
+import re
+import sys
+
+config_path, snapshot_path = sys.argv[1], sys.argv[2]
+config = open(config_path).read().rstrip("\n")
+snapshot = open(snapshot_path).read()
+starts = list(re.finditer(r'^\[([^]]+)\]\s*$', snapshot, re.MULTILINE))
+missing = []
+for index, match in enumerate(starts):
+    end = starts[index + 1].start() if index + 1 < len(starts) else len(snapshot)
+    header = match.group(0).strip()
+    if not re.search(r'^' + re.escape(header) + r'\s*$', config, re.MULTILINE):
+        missing.append(snapshot[match.start():end].strip("\n"))
+if missing:
+    config += "\n\n" + "\n\n".join(missing)
+open(config_path, "w").write(config + "\n")
+PYEOF
+  echo "repaired: ${CONFIG_TOML} (restored Codex marketplaces, plugins, features, and shell policy)"
 fi
 
 # Claude reserves the name "computer-use", so this Codex Desktop MCP cannot be
