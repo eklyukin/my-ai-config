@@ -97,6 +97,14 @@ if command -v claude >/dev/null 2>&1; then
 
   install_global_mcp playwright npx -y @playwright/mcp@latest
   install_global_mcp chrome-devtools npx -y chrome-devtools-mcp@latest
+
+  PERSONAL_CONTEXT_MCP="/Applications/Personal Context.app/Contents/MacOS/personal-context-mcp"
+  if [ -x "${PERSONAL_CONTEXT_MCP}" ]; then
+    install_global_mcp personal-context "${PERSONAL_CONTEXT_MCP}"
+  else
+    claude mcp remove --scope user personal-context >/dev/null 2>&1 || true
+    echo "Personal Context is not installed — optional MCP remains disabled"
+  fi
 else
   echo "WARN: claude CLI not found — skipping global Claude MCP installation" >&2
 fi

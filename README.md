@@ -80,6 +80,15 @@ Desktop's `computer-use` MCP when available.
 
 Both installers are designed to be re-run after pulling repository updates.
 
+### Optional Personal Context memory
+
+If the separate Xsolla `personal-context` application is installed in
+`/Applications`, the installers register its local stdio MCP for Claude and
+Codex. It lets both clients retrieve cleaned local session context from the
+same embedded memory. When the application is absent, the MCP is not
+registered and every other rule, skill, hook, and MCP continues to work
+normally.
+
 ## Verification
 
 Check that the expected skills and MCP servers are visible:
