@@ -20,11 +20,11 @@ missing=()
 [ -d "${local_root}/plans" ] || missing+=(".context/plans/")
 
 if [ "${#missing[@]}" -eq 0 ]; then
-  context="Read ${local_root}/AGENTS.md as supplementary local context after repository-tracked instructions. Load only task-relevant files linked from it. Start its non-blocking background remote synchronization for .context/CHANGELOG.md when delegation is available; never change the working tree or tracked files."
+  context="Read ${local_root}/AGENTS.md as supplementary local context after repository-tracked instructions. Load only task-relevant files linked from it. Write every file under .context/ in English regardless of the conversation language. Start its non-blocking background remote synchronization for .context/CHANGELOG.md when delegation is available; never change the working tree or tracked files."
 else
   list="$(printf '%s, ' "${missing[@]}")"
   list="${list%, }"
-  context="This repo is missing part of the local claude-md-refactor scaffold: ${list}. Use the claude-md-refactor skill to bootstrap it under .context/ only. Add /.context/ to .git/info/exclude, never modify remote/tracked CLAUDE.md, AGENTS.md, docs/, plans/, or .gitignore, and ask before creating INFRASTRUCTURE.md content that would require guessing."
+  context="This repo is missing part of the local repository-context scaffold: ${list}. Use the repository-context skill to bootstrap it under .context/ only and write every file there in English regardless of the conversation language. Add /.context/ to .git/info/exclude, never modify remote/tracked CLAUDE.md, AGENTS.md, docs/, plans/, or .gitignore, and ask before creating INFRASTRUCTURE.md content that would require guessing."
 fi
 
 python3 -c '

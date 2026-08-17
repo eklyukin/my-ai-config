@@ -94,6 +94,15 @@ if [ "${read_only}" = true ]; then
   exit 0
 fi
 
+# Remove Codex skill directories generated from repository-managed Claude
+# skills that were intentionally renamed. The migrator runs in merge mode and
+# otherwise leaves these orphaned generated targets behind.
+legacy_skill="${HOME}/.agents/skills/claude-md-refactor"
+if [ -d "${legacy_skill}" ] && [ ! -e "${CLAUDE_HOME}/skills/claude-md-refactor" ]; then
+  rm -rf -- "${legacy_skill}"
+  echo "removed renamed Codex skill: ${legacy_skill}"
+fi
+
 # --- repair AGENTS.md: restore the cross-agent-managed neo4j block verbatim ---
 if [ -s "${neo4j_block_snapshot}" ] && [ -f "${AGENTS_MD}" ]; then
   python3 - "${AGENTS_MD}" "${neo4j_block_snapshot}" <<'PYEOF'

@@ -73,6 +73,8 @@ Personal context for another repository belongs under that repository's ignored
 - Load only task-relevant files linked from `.context/AGENTS.md`.
 - Store implementation plans in `.context/plans/`.
 - Store the remote-aware local changelog in `.context/CHANGELOG.md`.
+- Write every file under `.context/` in English, even when the user or task
+  uses another language. Preserve exact identifiers and required quotations.
 - Add `/.context/` to `.git/info/exclude`; do not modify tracked `.gitignore`
   for personal context.
 - Never modify tracked `AGENTS.md`, `CLAUDE.md`, `docs/`, or `plans/` merely to

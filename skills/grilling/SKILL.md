@@ -38,7 +38,7 @@ Before any implementation:
 3. Ensure `.context/plans/` exists. Do not modify remote/tracked `plans/`, `docs/`, `CLAUDE.md`, or `AGENTS.md`.
 4. Obtain the date by running `date +%F`; never guess or hardcode it.
 5. Create `.context/plans/YYYY-MM-DD-<descriptive-slug>.md`. If the path already exists for a different task, choose a distinct slug and never overwrite it.
-6. Write the confirmed agreement using this structure:
+6. Write the confirmed agreement in English regardless of the interview language, using this structure:
 
 ```markdown
 # <Title>
@@ -68,6 +68,6 @@ Ready for implementation (YYYY-MM-DD)
 7. Show the user the created plan path and a concise summary.
 8. Stop and wait for a separate implementation instruction. Creating the plan is not authorization to implement it.
 
-If the `.context/` scaffold is missing or inconsistent, follow the installed `claude-md-refactor` rules to bootstrap or repair it without touching remote/tracked documentation.
+If the `.context/` scaffold is missing or inconsistent, follow the installed `repository-context` rules to bootstrap or repair it without touching remote/tracked documentation.
 
 Adapted from Matt Pocock's `grilling` skill under the MIT License. See `LICENSE.txt`.

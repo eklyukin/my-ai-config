@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - verifies tests, reconciles the plans/ doc for this work, then presents structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - verifies tests, reconciles the .context/plans/ doc for this work, then presents structured options for merge, PR, or cleanup
 ---
 
 # Finishing a Development Branch
@@ -39,7 +39,7 @@ Stop. Don't proceed to Step 2.
 
 ### Step 2: Reconcile the plan
 
-Check `plans/` for a file covering this work (see the `claude-md-refactor` skill for the naming convention `plans/YYYY-MM-DD-<slug>.md` and lifecycle).
+Check `.context/plans/` for a file covering this work (see the `repository-context` skill for the naming convention `.context/plans/YYYY-MM-DD-<slug>.md` and lifecycle). Create and update this file in English regardless of the conversation language.
 
 - **No matching plan exists:** Create one now — Context (task), Design (what was decided), Implementation (what was actually built, deviations from the discussion, follow-ups), Status: Done. Don't skip this just because the plan wasn't written up front — the record of task → design → what shipped → why is the point, not the timing.
 - **A plan exists but has no Implementation section filled in:** Fill it in — what was actually built, any deviations from the original design and why, follow-ups.
@@ -173,7 +173,7 @@ git worktree remove <worktree-path>
 - **Fix:** Always verify tests before offering options
 
 **Skipping the plan reconciliation**
-- **Problem:** `plans/` drifts from reality — the next person (or agent) reads a plan that describes the original design but not what was actually shipped or why it changed
+- **Problem:** `.context/plans/` drifts from reality — the next person (or agent) reads a plan that describes the original design but not what was actually shipped or why it changed
 - **Fix:** Always create or update the plan in Step 2, even for work that wasn't planned up front
 
 **Open-ended questions**
@@ -199,7 +199,7 @@ git worktree remove <worktree-path>
 
 **Always:**
 - Verify tests before offering options
-- Create or update the `plans/` doc for this work
+- Create or update the English `.context/plans/` doc for this work
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
@@ -207,4 +207,4 @@ git worktree remove <worktree-path>
 ## Pairs with
 
 - **using-git-worktrees** — cleans up the worktree created by that skill
-- **claude-md-refactor** — owns the `plans/` naming convention and lifecycle this skill reconciles against
+- **repository-context** — owns the `.context/plans/` naming convention, English-language requirement, and lifecycle this skill reconciles against

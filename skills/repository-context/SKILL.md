@@ -1,9 +1,9 @@
 ---
-name: claude-md-refactor
+name: repository-context
 description: Maintains conflict-free local repository context for Claude and Codex under .context/, with .context/AGENTS.md as the canonical map, CLAUDE.md as its symlink, selective context files, infrastructure notes, implementation plans, and a remote-aware local changelog. Use when creating or updating local agent context, plans, infrastructure notes, changelog entries, or when repository-tracked CLAUDE.md, AGENTS.md, docs, or plans must remain untouched.
 ---
 
-# claude-md-refactor
+# repository-context
 
 Keep personal agent context under `.context/` so it cannot conflict with files from the remote repository. Treat repository-tracked documentation as authoritative and never modify it as part of this workflow.
 
@@ -15,6 +15,7 @@ Keep personal agent context under `.context/` so it cannot conflict with files f
 4. Treat remote/tracked instructions as authoritative when they conflict with `.context/`.
 5. Read `.context/AGENTS.md` as a map first. Load only the linked files needed for the current task; never load all of `.context/` by default.
 6. Report a conflict between remote and local instructions, then follow the remote instruction.
+7. Write every file under `.context/` in English, even when the user or task uses another language. Preserve exact identifiers and required quotations.
 
 ## Target Structure
 
@@ -41,7 +42,7 @@ Create only context and docs files that carry useful information. Create `.conte
 1. Resolve the repository root with `git rev-parse --show-toplevel`.
 2. Inspect remote/tracked instruction and documentation files, but do not edit them.
 3. Ensure the exact line `/.context/` exists in `.git/info/exclude`; create `.git/info/` or `exclude` if necessary.
-4. Create `.context/AGENTS.md` as the canonical short map.
+4. Create `.context/AGENTS.md` as the canonical short English map.
 5. Create `.context/CLAUDE.md` as a symlink to `AGENTS.md`:
 
    ```bash
@@ -82,7 +83,7 @@ For each task:
 
 Use one file per unit of work: `.context/plans/YYYY-MM-DD-<slug>.md`. Obtain the date with `date +%F`; never guess it.
 
-For planned work, record context, design, key decisions, and open questions before implementation. During implementation, record deviations. After implementation, record what was built and the final status. For a small direct fix, omit the Design section but still create the historical record.
+Write every plan in English. For planned work, record context, design, key decisions, and open questions before implementation. During implementation, record deviations. After implementation, record what was built and the final status. For a small direct fix, omit the Design section but still create the historical record.
 
 Suggested structure:
 
@@ -104,7 +105,7 @@ Planned | In progress | Done (YYYY-MM-DD)
 
 ## `.context/CHANGELOG.md`
 
-Keep an append-only local record of significant remote changes, local decisions, and completed plans. Record why a change matters rather than repeating a file-by-file diff.
+Keep an append-only English-language local record of significant remote changes, local decisions, and completed plans. Record why a change matters rather than repeating a file-by-file diff.
 
 Use entries such as:
 
@@ -124,7 +125,7 @@ Give the background agent this bounded job:
 1. Run `git fetch --prune` to refresh remote refs without changing the working tree.
 2. Determine the upstream/default remote branch and the last processed remote commit recorded in `.context/CHANGELOG.md`.
 3. Review only the new commit log and relevant diffs.
-4. Update `.context/CHANGELOG.md` with concise entries describing what changed and why it matters locally.
+4. Update `.context/CHANGELOG.md` with concise English entries describing what changed and why it matters locally.
 5. Record the latest processed remote commit using `<!-- remote-head: <ref>@<sha> -->`.
 6. Never checkout, merge, rebase, reset, pull, modify tracked files, or expose secrets.
 7. If fetch or inspection fails, report the limitation without blocking the primary task or inventing an entry.
@@ -135,7 +136,7 @@ Embed this standing instruction in `.context/AGENTS.md`:
 
 ```markdown
 ## Session Start
-Start a background remote synchronization for `.context/CHANGELOG.md` without blocking the primary task. Refresh refs with `git fetch --prune`, summarize only remote commits since the recorded `remote-head`, update the local changelog and marker, and never change the working tree or tracked files. Remote instructions remain authoritative.
+Start a background remote synchronization for `.context/CHANGELOG.md` without blocking the primary task. Refresh refs with `git fetch --prune`, summarize only remote commits since the recorded `remote-head`, update the local changelog and marker in English, and never change the working tree or tracked files. Remote instructions remain authoritative.
 ```
 
 ## Infrastructure
@@ -149,6 +150,7 @@ Never write secret values. Record the secret manager or vault and exact credenti
 - `git check-ignore -q .context/` succeeds.
 - `.context/CLAUDE.md` resolves to `AGENTS.md`.
 - `.context/AGENTS.md` links only to existing local files.
+- Every `.context/` document is written in English.
 - Only task-relevant local context was loaded.
 - No tracked remote documentation was modified.
 - Every completed implementation has a local plan record.

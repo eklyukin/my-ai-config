@@ -114,7 +114,7 @@ client.
 
 ## Local repository context
 
-The `claude-md-refactor` skill stores personal repository context under an
+The `repository-context` skill stores personal repository context under an
 ignored `.context/` directory:
 
 ```text
@@ -131,7 +131,8 @@ ignored `.context/` directory:
 needed for the current task, while tracked repository instructions always have
 priority. The directory is excluded locally through `/.context/` in
 `.git/info/exclude`; tracked `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `docs/`,
-and `plans/` are not modified to store personal context.
+and `plans/` are not modified to store personal context. Every document under
+`.context/` is written in English regardless of the conversation language.
 
 The `grill-me` workflow interviews the user before implementation, records the
 confirmed agreement in `.context/plans/YYYY-MM-DD-<slug>.md`, and waits for a

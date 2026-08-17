@@ -23,7 +23,10 @@ MANAGED_DIRS=(rules skills agents commands hooks)
 # not an associative one — the default bash on macOS (3.2) predates declare -A.
 # Add an entry here whenever a new hook script needs to actually fire.
 HOOK_EVENTS=(
-  "session-start-claude-md-refactor.sh=SessionStart"
+  "session-start-repository-context.sh=SessionStart"
+)
+LEGACY_HOOK_COMMANDS=(
+  "${CLAUDE_DIR}/hooks/session-start-claude-md-refactor.sh"
 )
 
 mkdir -p "${CLAUDE_DIR}"
@@ -106,6 +109,35 @@ if command -v jq >/dev/null 2>&1; then
   if [ ! -f "${SETTINGS_JSON}" ]; then
     echo '{}' > "${SETTINGS_JSON}"
   fi
+  for legacy_command in "${LEGACY_HOOK_COMMANDS[@]}"; do
+    if jq -e --arg cmd "${legacy_command}" '
+      any(
+        (.hooks // {} | to_entries[]? | .value[]? | .hooks[]?);
+        .type == "command" and .command == $cmd
+      )
+    ' "${SETTINGS_JSON}" >/dev/null; then
+      tmp_settings="$(mktemp)"
+      if jq --arg cmd "${legacy_command}" '
+        .hooks |= with_entries(
+          .value = [
+            .value[]
+            | if ((.hooks? // null) | type) == "array" then
+                .hooks = [.hooks[] | select(.type != "command" or .command != $cmd)]
+              else
+                .
+              end
+            | select(((.hooks? // []) | length) > 0)
+          ]
+        )
+      ' "${SETTINGS_JSON}" > "${tmp_settings}"; then
+        mv "${tmp_settings}" "${SETTINGS_JSON}"
+        echo "removed renamed hook registration: ${legacy_command}"
+      else
+        rm -f "${tmp_settings}"
+        exit 1
+      fi
+    fi
+  done
   for entry in "${HOOK_EVENTS[@]}"; do
     script="${entry%%=*}"
     event="${entry#*=}"
