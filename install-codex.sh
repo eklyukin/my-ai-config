@@ -118,7 +118,7 @@ PYEOF
   echo "repaired: ${AGENTS_MD} (restored corporate neo4j-graph-first block)"
 fi
 
-# --- install the shared _local/ discovery rule for Codex ---
+# --- install the shared .context/ discovery rule for Codex ---
 # Claude loads this file from ~/.claude/rules; Codex needs the same content in
 # its global AGENTS.md. Replace only this repo's marked block.
 if [ -f "${LOCAL_CONTEXT_RULE}" ] && [ -f "${AGENTS_MD}" ]; then
@@ -145,7 +145,7 @@ else:
     agents += "\n\n" + block
 open(agents_path, "w").write(agents.strip() + "\n")
 PYEOF
-  echo "repaired: ${AGENTS_MD} (installed _local/ discovery rule)"
+  echo "repaired: ${AGENTS_MD} (installed .context/ discovery rule)"
 fi
 
 # --- repair config.toml: re-add project trust levels, drop invalid model id ---

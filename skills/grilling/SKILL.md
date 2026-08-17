@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Relentlessly interviews the user one decision at a time to expose assumptions and sharpen a plan, design, architecture, product idea, or implementation approach. Use when the user explicitly asks to be grilled or invokes grill-me, and finish by writing the confirmed plan to _local/plans/ before any implementation.
+description: Relentlessly interviews the user one decision at a time to expose assumptions and sharpen a plan, design, architecture, product idea, or implementation approach. Use when the user explicitly asks to be grilled or invokes grill-me, and finish by writing the confirmed plan to .context/plans/ before any implementation.
 ---
 
 # Grilling
@@ -34,10 +34,10 @@ When the decision tree appears complete:
 Before any implementation:
 
 1. Resolve the Git repository root. If the current directory is not in a Git repository, use the current workspace root.
-2. Ensure `/_local/` is listed in the repository's `.git/info/exclude`. Do not modify tracked `.gitignore`.
-3. Ensure `_local/plans/` exists. Do not modify remote/tracked `plans/`, `docs/`, `CLAUDE.md`, or `AGENTS.md`.
+2. Ensure `/.context/` is listed in the repository's `.git/info/exclude`. Do not modify tracked `.gitignore`.
+3. Ensure `.context/plans/` exists. Do not modify remote/tracked `plans/`, `docs/`, `CLAUDE.md`, or `AGENTS.md`.
 4. Obtain the date by running `date +%F`; never guess or hardcode it.
-5. Create `_local/plans/YYYY-MM-DD-<descriptive-slug>.md`. If the path already exists for a different task, choose a distinct slug and never overwrite it.
+5. Create `.context/plans/YYYY-MM-DD-<descriptive-slug>.md`. If the path already exists for a different task, choose a distinct slug and never overwrite it.
 6. Write the confirmed agreement using this structure:
 
 ```markdown
@@ -68,6 +68,6 @@ Ready for implementation (YYYY-MM-DD)
 7. Show the user the created plan path and a concise summary.
 8. Stop and wait for a separate implementation instruction. Creating the plan is not authorization to implement it.
 
-If the `_local/` scaffold is missing or inconsistent, follow the installed `claude-md-refactor` rules to bootstrap or repair it without touching remote/tracked documentation.
+If the `.context/` scaffold is missing or inconsistent, follow the installed `claude-md-refactor` rules to bootstrap or repair it without touching remote/tracked documentation.
 
 Adapted from Matt Pocock's `grilling` skill under the MIT License. See `LICENSE.txt`.

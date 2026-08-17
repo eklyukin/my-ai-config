@@ -1,77 +1,186 @@
 # my-ai-config
 
-Personal repository of rules/skills/agents/commands for Claude Code, deployed into `~/.claude/` via symlinks.
+`my-ai-config` is a personal, repository-managed configuration for Claude Code
+and Codex. It keeps reusable rules, skills, commands, hooks, and global MCP
+defaults in one place and installs them without taking ownership of unrelated
+user or corporate configuration.
 
-## Install
+## What is included
+
+- shared coding and commit rules;
+- reusable engineering, review, planning, frontend, infrastructure, and Neo4j
+  skills;
+- Claude Code commands, agents, and lifecycle hooks;
+- Codex-compatible versions of the shared skills and instructions;
+- global browser MCP defaults:
+  - `playwright` for repeatable browser automation and UI tests;
+  - `chrome-devtools` for inspecting an existing Chrome session;
+  - `computer-use` for Codex Desktop when its local client is available;
+- the `.context/` convention for conflict-free, repository-local personal
+  context and implementation plans.
+
+## Requirements
+
+- macOS or another Unix-like environment with Bash;
+- Git;
+- Claude Code installed for Claude configuration;
+- Codex installed for Codex configuration;
+- `jq` for merging Claude hook registrations;
+- the curated `migrate-to-codex` skill available to Codex.
+
+If `migrate-to-codex` is not installed, ask Codex to install the curated skill:
+
+```text
+$skill-installer migrate-to-codex
+```
+
+Restart Codex after installation. The installer locates the bundled migration
+script under `~/.codex/vendor_imports/skills/`.
+
+## Installation
+
+Clone the repository and enter it:
+
+```bash
+git clone https://github.com/eklyukin/my-ai-config.git
+cd my-ai-config
+```
+
+Install the Claude Code configuration first:
 
 ```bash
 bash install.sh
 ```
 
-The script symlinks the contents of `rules/`, `skills/`, `agents/`, `commands/`, `hooks/` into the matching directories under `~/.claude/`. Re-running is idempotent:
+This creates managed symlinks under `~/.claude/` for repository content in
+`rules/`, `skills/`, `agents/`, `commands/`, and `hooks/`. Re-running the
+installer is safe and converges the managed symlinks to the current repository
+state. Existing real files and symlinks not owned by this repository are not
+overwritten.
 
-- if a file/skill was renamed or removed in the repo — the old symlink in `~/.claude/` is removed;
-- if a symlink already exists — it's recreated (the repo's current version wins);
-- if a real file (not a symlink) already sits at the target path — install.sh **leaves it alone** and prints a warning.
+The installer also:
 
-It also installs these user-scoped MCP servers globally for Claude Code:
+- registers this repository's Claude hooks in `~/.claude/settings.json` while
+  preserving unrelated settings;
+- installs `playwright` and `chrome-devtools` as user-scoped Claude MCP
+  servers.
 
-- `playwright` (`@playwright/mcp`);
-- `chrome-devtools` (`chrome-devtools-mcp`).
-
-`install-codex.sh` makes both servers globally available in Codex and also
-registers `computer-use` from Codex Desktop globally. Claude Code reserves the
-name `computer-use`, so that Codex-specific MCP cannot be added to Claude's
-user MCP configuration.
-
-The named entries are managed by this repo and refreshed on every run. Other
-global and project-scoped MCP servers are left untouched.
-
-Remove everything install.sh set up:
-
-```bash
-bash uninstall.sh
-```
-
-## Codex compatibility
+Then install the Codex configuration:
 
 ```bash
 bash install-codex.sh
 ```
 
-Runs OpenAI's `migrate-to-codex` Codex skill against `~/.claude/` and merges skills, globally managed MCP servers, and hooks into `~/.codex/`. Run `bash install.sh` first so the default MCP set is current. That migrator rebuilds `~/AGENTS.md` and `~/.codex/config.toml` from scratch on every run, so the script also repairs what it overwrites: it restores the corporate-managed Neuronet code-search block in `~/AGENTS.md` (not owned by this repo, same as `~/.claude/rules/neo4j-graph-first.md`) and the `[projects."..."]` trust levels in `~/.codex/config.toml`, and drops any invalid Claude model alias (e.g. `sonnet`) the migrator wrote. Safe to re-run. Requires the `migrate-to-codex` Codex skill to already be installed (`~/.codex/vendor_imports/skills/`).
+The Codex installer migrates the Claude configuration into Codex, then restores
+Codex-native settings that the migration tool does not own. In particular, it
+preserves project trust levels, Codex MCP servers, marketplaces, plugins,
+feature flags, shell policy, and the corporate Neuronet instruction block. It
+also installs the shared `.context/` discovery rule and registers Codex
+Desktop's `computer-use` MCP when available.
 
-Codex has no equivalent of `agents/` (subagents) or this repo's `hooks/` — those aren't migrated.
+Both installers are designed to be re-run after pulling repository updates.
 
-## What this repo does NOT own
+## Verification
 
-- `~/.claude/settings.json` — managed by the corporate MDM mechanism (hooks, env). Not touched by this install.sh.
-- `~/.claude/rules/neo4j-graph-first.md` — also pushed by MDM (see `~/.claude/.xsolla-mdm-backup/`). Not included in this repo.
-- `~/.claude/skills/gcloud` — an existing separate symlink into the corporate `claude-config`, unrelated to this install.sh.
+Check that the expected skills and MCP servers are visible:
+
+```bash
+test -f ~/.claude/skills/grill-me/SKILL.md
+test -f ~/.agents/skills/grill-me/SKILL.md
+claude mcp list
+codex mcp list
+```
+
+The browser defaults should include `playwright` and `chrome-devtools` in both
+clients, plus `computer-use` in Codex when Codex Desktop provides the local
+client.
+
+## Repository structure
+
+```text
+.
+├── AGENTS.md          # canonical repository instructions for AI agents
+├── CLAUDE.md          # Claude entry point; delegates to AGENTS.md
+├── README.md          # user documentation
+├── rules/             # shared behavioral and workflow rules
+├── skills/            # reusable skills, one directory per skill
+├── agents/            # Claude-specific subagent definitions
+├── commands/          # Claude-specific commands
+├── hooks/             # lifecycle hooks
+├── install.sh         # Claude installer
+├── install-codex.sh   # Codex migration and repair installer
+└── uninstall.sh       # removes Claude symlinks managed by this repository
+```
 
 ## Local repository context
 
-The `claude-md-refactor` skill keeps personal repository documentation under
-`_local/`, without touching remote/tracked `CLAUDE.md`, `AGENTS.md`, `docs/`,
-`plans/`, or `.gitignore`. `_local/AGENTS.md` is the canonical map and
-`_local/CLAUDE.md` is a symlink to it. Each repository excludes the directory
-through its local `.git/info/exclude` entry `/_local/`.
+The `claude-md-refactor` skill stores personal repository context under an
+ignored `.context/` directory:
 
-Claude discovers this convention through `rules/local-context.md` and the
-SessionStart hook. `install-codex.sh` installs the same marked discovery rule
-into the global `~/AGENTS.md`, so Codex loads only task-relevant files linked
-from `_local/AGENTS.md`.
-
-## Adding something new
-
-Drop a file/folder into the matching directory (`rules/`, `skills/<name>/SKILL.md`, `agents/<name>.md`, `commands/<name>.md`, `hooks/<name>.sh`) and re-run `bash install.sh`.
-
-## Reusing skills from the corporate repo
-
-The corporate `claude-config` (`skills/public/...`) holds the company's shared skill catalog. To use a specific skill from there alongside your personal ones, set up a separate symlink by hand (as already done for `gcloud`):
-
-```bash
-ln -s /path/to/claude-config/skills/public/<category>/<skill> ~/.claude/skills/<skill>
+```text
+.context/
+├── AGENTS.md
+├── CLAUDE.md -> AGENTS.md
+├── CHANGELOG.md
+├── INFRASTRUCTURE.md
+├── contexts/
+└── plans/
 ```
 
-This is deliberately not automated by this repo's `install.sh` — this personal repo is only responsible for what lives inside it.
+`.context/AGENTS.md` is the canonical map. Agents read only the linked files
+needed for the current task, while tracked repository instructions always have
+priority. The directory is excluded locally through `/.context/` in
+`.git/info/exclude`; tracked `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `docs/`,
+and `plans/` are not modified to store personal context.
+
+The `grill-me` workflow interviews the user before implementation, records the
+confirmed agreement in `.context/plans/YYYY-MM-DD-<slug>.md`, and waits for a
+separate instruction before changing product code.
+
+## Adding or updating configuration
+
+Add content to the matching repository directory:
+
+- `rules/<name>.md` for shared rules;
+- `skills/<name>/SKILL.md` for a skill;
+- `agents/<name>.md` for a Claude subagent;
+- `commands/<name>.md` for a Claude command;
+- `hooks/<name>.sh` for a lifecycle hook.
+
+When a hook needs automatic registration, add its event mapping to
+`HOOK_EVENTS` in `install.sh`. After any change, run both installers and verify
+the installed paths.
+
+## Configuration ownership
+
+The installers intentionally preserve configuration they do not own. Notable
+examples include:
+
+- unrelated keys in `~/.claude/settings.json`;
+- the corporate-managed `neo4j-graph-first` rule;
+- unrelated Claude skills and MCP servers;
+- Codex project trust levels, native MCP servers, plugins, marketplaces,
+  features, and shell policy.
+
+Review `~/.codex/migrate-to-codex-report.txt` after migration for fields that
+require manual compatibility review.
+
+The repository owns only the Claude symlinks recorded in
+`~/.claude/.my-ai-config-manifest`, its hook command registrations listed in
+`HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright` and
+`chrome-devtools`, the marked `my-ai-config-local-context` block in
+`~/AGENTS.md`, the Codex `computer-use` MCP entry it registers, and a converted
+Codex skill at `~/.agents/skills/<name>` only when the corresponding
+`~/.claude/skills/<name>` symlink is recorded in the manifest and resolves
+inside this repository. All other configuration must be preserved or restored
+during installation.
+
+## Uninstalling Claude symlinks
+
+```bash
+bash uninstall.sh
+```
+
+The uninstall script removes only Claude symlinks recorded as managed by this
+repository. Codex migration output is not removed automatically because it is
+merged with native Codex configuration.
