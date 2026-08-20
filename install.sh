@@ -17,7 +17,8 @@ SETTINGS_JSON="${CLAUDE_DIR}/settings.json"
 MANAGED_DIRS=(rules skills agents commands hooks)
 
 # MCP servers owned by this repo and installed globally for Claude Code.
-# install-codex.sh migrates them into Codex and adds Codex Desktop computer-use.
+# install-codex.sh migrates them into Codex and adds Codex-native hosted MCPs.
+VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
 
 # hooks/<script>=<Event> it needs registered under in settings.json. Plain array,
 # not an associative one — the default bash on macOS (3.2) predates declare -A.
@@ -97,6 +98,12 @@ if command -v claude >/dev/null 2>&1; then
 
   install_global_mcp playwright npx -y @playwright/mcp@latest
   install_global_mcp chrome-devtools npx -y chrome-devtools-mcp@latest
+  if claude mcp get vimeo 2>/dev/null | grep -qF "URL: ${VIMEO_MCP_URL}"; then
+    echo "unchanged: Vimeo MCP (${VIMEO_MCP_URL})"
+  else
+    claude mcp remove --scope user vimeo >/dev/null 2>&1 || true
+    claude mcp add --scope user --transport http vimeo "${VIMEO_MCP_URL}"
+  fi
 else
   echo "WARN: claude CLI not found — skipping global Claude MCP installation" >&2
 fi

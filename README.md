@@ -17,6 +17,7 @@ user or corporate configuration.
   - `chrome-devtools` for inspecting an existing Chrome session;
   - `computer-use` for Codex Desktop when its local client is available;
   - `slack` for read-only Slack access after supplying a user token;
+  - `vimeo` for transcripts, video metadata, and analytics after OAuth login;
 - the `.context/` convention for conflict-free, repository-local personal
   context and implementation plans.
 
@@ -63,8 +64,8 @@ The installer also:
 
 - registers this repository's Claude hooks in `~/.claude/settings.json` while
   preserving unrelated settings;
-- installs `playwright` and `chrome-devtools` as user-scoped Claude MCP
-  servers.
+- installs `playwright`, `chrome-devtools`, and `vimeo` as user-scoped Claude
+  MCP servers.
 
 Then install the Codex configuration:
 
@@ -78,8 +79,8 @@ preserves project trust levels, Codex MCP servers, marketplaces, plugins,
 feature flags, shell policy, and the corporate Neuronet instruction block. It
 also copies supporting files referenced by shared skills, installs the shared
 `.context/` discovery rule, and registers Codex Desktop's `computer-use` MCP
-when available, plus Slack's hosted MCP endpoint without storing the Slack
-token in `~/.codex/config.toml`.
+when available, plus the hosted Slack and Vimeo MCP endpoints without storing
+credentials in `~/.codex/config.toml`.
 
 Slack needs a separately created user token before it can be used. Follow the
 [Slack MCP setup guide](docs/slack-mcp.md) to create a least-privilege
@@ -98,9 +99,10 @@ claude mcp list
 codex mcp list
 ```
 
-The browser defaults should include `playwright` and `chrome-devtools` in both
+The defaults should include `playwright`, `chrome-devtools`, and `vimeo` in both
 clients, plus `computer-use` in Codex when Codex Desktop provides the local
-client and `slack` in Codex. Slack becomes operational after
+client and `slack` in Codex. Vimeo requires a one-time OAuth login in each
+client. Slack becomes operational after
 `SLACK_MCP_TOKEN` is configured as described in the
 [Slack MCP setup guide](docs/slack-mcp.md).
 
@@ -178,10 +180,10 @@ require manual compatibility review.
 
 The repository owns only the Claude symlinks recorded in
 `~/.claude/.my-ai-config-manifest`, its hook command registrations listed in
-`HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright` and
-`chrome-devtools`, the marked `my-ai-config-local-context` and
+`HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright`,
+`chrome-devtools`, and `vimeo`, the marked `my-ai-config-local-context` and
 `my-ai-config-browser` blocks in `~/AGENTS.md`, the Codex MCP entries named
-`computer-use` and `slack`, and a converted
+`computer-use`, `slack`, and `vimeo`, and a converted
 Codex skill at `~/.agents/skills/<name>` only when the corresponding
 `~/.claude/skills/<name>` symlink is recorded in the manifest and resolves
 inside this repository. All other configuration must be preserved or restored

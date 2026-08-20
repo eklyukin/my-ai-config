@@ -27,6 +27,7 @@ BROWSER_RULE="${CLAUDE_HOME}/rules/existing-browser.md"
 COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
 SLACK_MCP_URL="https://mcp.slack.com/mcp"
 SLACK_MCP_TOKEN_ENV="SLACK_MCP_TOKEN"
+VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
 
 MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
 if [ -z "${MIGRATOR}" ]; then
@@ -314,6 +315,15 @@ codex mcp remove slack >/dev/null 2>&1 || true
 codex mcp add slack \
   --url "${SLACK_MCP_URL}" \
   --bearer-token-env-var "${SLACK_MCP_TOKEN_ENV}"
+
+# Vimeo uses browser-based OAuth, so no token or client secret is stored here.
+# Keep an existing matching entry to preserve its OAuth session across reruns.
+if codex mcp get vimeo 2>/dev/null | grep -qF "url: ${VIMEO_MCP_URL}"; then
+  echo "unchanged: Vimeo MCP (${VIMEO_MCP_URL})"
+else
+  codex mcp remove vimeo >/dev/null 2>&1 || true
+  codex mcp add vimeo --url "${VIMEO_MCP_URL}"
+fi
 
 if command -v launchctl >/dev/null 2>&1 \
   && [ -n "$(launchctl getenv "${SLACK_MCP_TOKEN_ENV}")" ]; then
