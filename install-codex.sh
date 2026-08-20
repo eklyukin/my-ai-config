@@ -17,6 +17,7 @@
 # Safe to re-run: idempotent snapshot-then-restore, same pattern as install.sh.
 set -euo pipefail
 
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CODEX_HOME="${HOME}/.codex"
 CLAUDE_HOME="${HOME}/.claude"
 AGENTS_MD="${HOME}/AGENTS.md"
@@ -93,6 +94,44 @@ python3 "${MIGRATOR}" --source "${CLAUDE_HOME}/" --target "${CODEX_HOME}/" "$@"
 if [ "${read_only}" = true ]; then
   exit 0
 fi
+
+# The migrator converts SKILL.md but does not copy referenced support files.
+# Copy those files only for Claude skill symlinks owned by this repository,
+# while preserving the migrator's Codex-compatible SKILL.md conversion.
+python3 - "${CLAUDE_HOME}" "${HOME}/.agents/skills" "${REPO_DIR}" <<'PYEOF'
+import os
+import shutil
+import sys
+
+claude_home, codex_skills, repository = map(os.path.realpath, sys.argv[1:])
+claude_skills = os.path.join(claude_home, "skills")
+repository_skills = os.path.join(repository, "skills") + os.sep
+
+if os.path.isdir(claude_skills):
+    for name in os.listdir(claude_skills):
+        source_link = os.path.join(claude_skills, name)
+        if not os.path.islink(source_link):
+            continue
+        source = os.path.realpath(source_link)
+        if not source.startswith(repository_skills):
+            continue
+        target = os.path.join(codex_skills, name)
+        if not os.path.isdir(target):
+            continue
+        copied = 0
+        for root, directories, files in os.walk(source):
+            directories[:] = [entry for entry in directories if not entry.startswith(".")]
+            relative_root = os.path.relpath(root, source)
+            target_root = target if relative_root == "." else os.path.join(target, relative_root)
+            os.makedirs(target_root, exist_ok=True)
+            for filename in files:
+                if relative_root == "." and filename == "SKILL.md":
+                    continue
+                shutil.copy2(os.path.join(root, filename), os.path.join(target_root, filename))
+                copied += 1
+        if copied:
+            print(f"repaired: {target} (copied {copied} supporting skill file(s))")
+PYEOF
 
 # Remove Codex skill directories generated from repository-managed Claude
 # skills that were intentionally renamed. The migrator runs in merge mode and

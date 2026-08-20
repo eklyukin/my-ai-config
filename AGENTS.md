@@ -51,16 +51,11 @@ This repository may create, replace, or remove only:
   into this repository;
 - Claude hook command registrations explicitly listed in `HOOK_EVENTS`;
 - user-scoped Claude MCP entries named `playwright` and `chrome-devtools`;
-- the optional user-scoped Claude/Codex MCP entry named `personal-context`;
 - the marked `my-ai-config-local-context` block in `~/AGENTS.md`;
 - the Codex MCP entry named `computer-use` installed by `install-codex.sh`;
 - a converted Codex skill at `~/.agents/skills/<name>` only when the matching
   `~/.claude/skills/<name>` symlink is recorded in
   `~/.claude/.my-ai-config-manifest` and resolves inside this repository.
-
-The optional Personal Context integration must degrade cleanly. Installers may
-register its MCP only when the signed application binary exists, and its rules
-and skills must never make normal Claude or Codex work depend on that service.
 
 The Codex installer may temporarily regenerate shared files only when it first
 snapshots and then restores unrelated Codex-native sections. Corporate

@@ -75,19 +75,11 @@ The Codex installer migrates the Claude configuration into Codex, then restores
 Codex-native settings that the migration tool does not own. In particular, it
 preserves project trust levels, Codex MCP servers, marketplaces, plugins,
 feature flags, shell policy, and the corporate Neuronet instruction block. It
-also installs the shared `.context/` discovery rule and registers Codex
-Desktop's `computer-use` MCP when available.
+also copies supporting files referenced by shared skills, installs the shared
+`.context/` discovery rule, and registers Codex Desktop's `computer-use` MCP
+when available.
 
 Both installers are designed to be re-run after pulling repository updates.
-
-### Optional Personal Context memory
-
-If the separate Xsolla `personal-context` application is installed in
-`/Applications`, the installers register its local stdio MCP for Claude and
-Codex. It lets both clients retrieve cleaned local session context from the
-same embedded memory. When the application is absent, the MCP is not
-registered and every other rule, skill, hook, and MCP continues to work
-normally.
 
 ## Verification
 
