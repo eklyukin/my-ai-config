@@ -23,6 +23,7 @@ CLAUDE_HOME="${HOME}/.claude"
 AGENTS_MD="${HOME}/AGENTS.md"
 CONFIG_TOML="${CODEX_HOME}/config.toml"
 LOCAL_CONTEXT_RULE="${CLAUDE_HOME}/rules/local-context.md"
+BROWSER_RULE="${CLAUDE_HOME}/rules/existing-browser.md"
 COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
 
 MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
@@ -194,6 +195,36 @@ else:
 open(agents_path, "w").write(agents.strip() + "\n")
 PYEOF
   echo "repaired: ${AGENTS_MD} (installed .context/ discovery rule)"
+fi
+
+# --- install the shared existing-browser rule for Codex ---
+# Keep the browser policy global for both clients while replacing only this
+# repository's explicitly owned marked block.
+if [ -f "${BROWSER_RULE}" ] && [ -f "${AGENTS_MD}" ]; then
+  python3 - "${AGENTS_MD}" "${BROWSER_RULE}" <<'PYEOF'
+import re
+import sys
+
+agents_path, rule_path = sys.argv[1], sys.argv[2]
+agents = open(agents_path).read().rstrip("\n")
+rule = open(rule_path).read().strip()
+block = (
+    "<!-- my-ai-config-browser:start -->\n"
+    + rule
+    + "\n<!-- my-ai-config-browser:end -->"
+)
+pattern = re.compile(
+    r"\n?<!-- my-ai-config-browser:start -->.*?"
+    r"<!-- my-ai-config-browser:end -->",
+    re.DOTALL,
+)
+if pattern.search(agents):
+    agents = pattern.sub("\n\n" + block, agents, count=1)
+else:
+    agents += "\n\n" + block
+open(agents_path, "w").write(agents.strip() + "\n")
+PYEOF
+  echo "repaired: ${AGENTS_MD} (installed existing-browser rule)"
 fi
 
 # --- repair config.toml: re-add project trust levels, drop invalid model id ---

@@ -54,8 +54,8 @@ When the user asks to redesign (not build from scratch), adapt the workflow:
 When implementing or changing a user interface:
 
 1. Use Playwright MCP and Chrome DevTools MCP when they are connected and available.
-2. Prefer the user's already-open Google Chrome session. Open the tested page in a new tab, or explicitly ask which existing tab to use when the choice matters.
-3. Do not launch a separate isolated browser profile when the existing Chrome session provides the required authentication or application state.
+2. You MUST inspect and reuse the user's already-open Google Chrome session before opening another browser. Use the obvious matching tab; ask which existing tab to use when multiple tabs are plausible or acting could change user state.
+3. Open new URLs in a new tab in the existing Chrome window and profile. Never silently launch a separate isolated browser; report the limitation first if the existing session cannot support the operation.
 4. After making UI changes, open the affected screen and inspect its rendered state. Use screenshots and browser diagnostics to check layout, overflow, spacing, responsive behavior, console errors, and failed network requests.
 5. When a Figma design exists and Figma MCP is connected, inspect the relevant design through Figma MCP and compare the implementation against it, including all supplied breakpoints and states.
 6. Do not consider visual verification complete based only on a successful build, test run, or opened URL. Visually inspect the rendered result.
@@ -64,7 +64,7 @@ When implementing or changing a user interface:
 ### Tool Priority
 
 - Use Chrome DevTools MCP for the user's already-open Chrome session and authenticated pages.
-- Use Playwright MCP for repeatable scenarios, responsive viewport checks, and automated UI verification.
+- Use Playwright MCP for repeatable scenarios, responsive viewport checks, and automated UI verification while reusing the existing Chrome session whenever supported.
 - Use Figma MCP to inspect and compare against the source design when a Figma layout exists and the server is connected.
 
 ## Brand Alignment

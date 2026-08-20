@@ -170,8 +170,9 @@ require manual compatibility review.
 The repository owns only the Claude symlinks recorded in
 `~/.claude/.my-ai-config-manifest`, its hook command registrations listed in
 `HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright` and
-`chrome-devtools`, the marked `my-ai-config-local-context` block in
-`~/AGENTS.md`, the Codex `computer-use` MCP entry it registers, and a converted
+`chrome-devtools`, the marked `my-ai-config-local-context` and
+`my-ai-config-browser` blocks in `~/AGENTS.md`, the Codex `computer-use` MCP
+entry it registers, and a converted
 Codex skill at `~/.agents/skills/<name>` only when the corresponding
 `~/.claude/skills/<name>` symlink is recorded in the manifest and resolves
 inside this repository. All other configuration must be preserved or restored

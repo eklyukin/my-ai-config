@@ -51,7 +51,8 @@ This repository may create, replace, or remove only:
   into this repository;
 - Claude hook command registrations explicitly listed in `HOOK_EVENTS`;
 - user-scoped Claude MCP entries named `playwright` and `chrome-devtools`;
-- the marked `my-ai-config-local-context` block in `~/AGENTS.md`;
+- the marked `my-ai-config-local-context` and `my-ai-config-browser` blocks in
+  `~/AGENTS.md`;
 - the Codex MCP entry named `computer-use` installed by `install-codex.sh`;
 - a converted Codex skill at `~/.agents/skills/<name>` only when the matching
   `~/.claude/skills/<name>` symlink is recorded in
