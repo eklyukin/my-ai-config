@@ -16,6 +16,7 @@ user or corporate configuration.
   - `playwright` for repeatable browser automation and UI tests;
   - `chrome-devtools` for inspecting an existing Chrome session;
   - `computer-use` for Codex Desktop when its local client is available;
+  - `slack` for read-only Slack access after supplying a user token;
 - the `.context/` convention for conflict-free, repository-local personal
   context and implementation plans.
 
@@ -77,7 +78,12 @@ preserves project trust levels, Codex MCP servers, marketplaces, plugins,
 feature flags, shell policy, and the corporate Neuronet instruction block. It
 also copies supporting files referenced by shared skills, installs the shared
 `.context/` discovery rule, and registers Codex Desktop's `computer-use` MCP
-when available.
+when available, plus Slack's hosted MCP endpoint without storing the Slack
+token in `~/.codex/config.toml`.
+
+Slack needs a separately created user token before it can be used. Follow the
+[Slack MCP setup guide](docs/slack-mcp.md) to create a least-privilege
+read-only token and make it available to Codex Desktop.
 
 Both installers are designed to be re-run after pulling repository updates.
 
@@ -94,7 +100,9 @@ codex mcp list
 
 The browser defaults should include `playwright` and `chrome-devtools` in both
 clients, plus `computer-use` in Codex when Codex Desktop provides the local
-client.
+client and `slack` in Codex. Slack becomes operational after
+`SLACK_MCP_TOKEN` is configured as described in the
+[Slack MCP setup guide](docs/slack-mcp.md).
 
 ## Repository structure
 
@@ -107,6 +115,7 @@ client.
 ├── skills/            # reusable skills, one directory per skill
 ├── agents/            # Claude-specific subagent definitions
 ├── commands/          # Claude-specific commands
+├── docs/              # setup guides for optional integrations
 ├── hooks/             # lifecycle hooks
 ├── install.sh         # Claude installer
 ├── install-codex.sh   # Codex migration and repair installer
@@ -171,8 +180,8 @@ The repository owns only the Claude symlinks recorded in
 `~/.claude/.my-ai-config-manifest`, its hook command registrations listed in
 `HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright` and
 `chrome-devtools`, the marked `my-ai-config-local-context` and
-`my-ai-config-browser` blocks in `~/AGENTS.md`, the Codex `computer-use` MCP
-entry it registers, and a converted
+`my-ai-config-browser` blocks in `~/AGENTS.md`, the Codex MCP entries named
+`computer-use` and `slack`, and a converted
 Codex skill at `~/.agents/skills/<name>` only when the corresponding
 `~/.claude/skills/<name>` symlink is recorded in the manifest and resolves
 inside this repository. All other configuration must be preserved or restored

@@ -41,7 +41,8 @@ preserve configuration outside the repository's explicit ownership boundary.
    syntax and migration behavior.
 7. Keep global MCP defaults repository-managed and available from every project.
    The expected browser set is `playwright` and `chrome-devtools` for both
-   clients, plus Codex-specific `computer-use` when available.
+   clients, plus Codex-specific `computer-use` when available and the hosted
+   Slack MCP endpoint without embedding its user token.
 
 ## Ownership boundary
 
@@ -53,7 +54,8 @@ This repository may create, replace, or remove only:
 - user-scoped Claude MCP entries named `playwright` and `chrome-devtools`;
 - the marked `my-ai-config-local-context` and `my-ai-config-browser` blocks in
   `~/AGENTS.md`;
-- the Codex MCP entry named `computer-use` installed by `install-codex.sh`;
+- the Codex MCP entries named `computer-use` and `slack` installed by
+  `install-codex.sh`;
 - a converted Codex skill at `~/.agents/skills/<name>` only when the matching
   `~/.claude/skills/<name>` symlink is recorded in
   `~/.claude/.my-ai-config-manifest` and resolves inside this repository.

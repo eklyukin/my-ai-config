@@ -25,6 +25,8 @@ CONFIG_TOML="${CODEX_HOME}/config.toml"
 LOCAL_CONTEXT_RULE="${CLAUDE_HOME}/rules/local-context.md"
 BROWSER_RULE="${CLAUDE_HOME}/rules/existing-browser.md"
 COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+SLACK_MCP_URL="https://mcp.slack.com/mcp"
+SLACK_MCP_TOKEN_ENV="SLACK_MCP_TOKEN"
 
 MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
 if [ -z "${MIGRATOR}" ]; then
@@ -303,6 +305,21 @@ if [ -x "${COMPUTER_USE_CLIENT}" ]; then
   codex mcp add computer-use -- "${COMPUTER_USE_CLIENT}" mcp
 else
   echo "WARN: Codex Desktop computer-use client not found — skipping global computer-use MCP" >&2
+fi
+
+# Register Slack's hosted MCP endpoint without storing credentials in
+# config.toml. The user supplies a read-only xoxp token through the named
+# environment variable; see docs/slack-mcp.md for the OAuth and desktop setup.
+codex mcp remove slack >/dev/null 2>&1 || true
+codex mcp add slack \
+  --url "${SLACK_MCP_URL}" \
+  --bearer-token-env-var "${SLACK_MCP_TOKEN_ENV}"
+
+if command -v launchctl >/dev/null 2>&1 \
+  && [ -n "$(launchctl getenv "${SLACK_MCP_TOKEN_ENV}")" ]; then
+  echo "configured: Slack MCP (${SLACK_MCP_TOKEN_ENV} is available to desktop apps)"
+else
+  echo "NOTICE: Slack MCP requires ${SLACK_MCP_TOKEN_ENV}; follow ${REPO_DIR}/docs/slack-mcp.md" >&2
 fi
 
 echo "Done. Review ${CODEX_HOME}/migrate-to-codex-report.txt for remaining manual-review items."
