@@ -78,8 +78,15 @@ Personal context for another repository belongs under that repository's ignored
 - Load only task-relevant files linked from `.context/AGENTS.md`.
 - Store implementation plans in `.context/plans/`.
 - Store the remote-aware local changelog in `.context/CHANGELOG.md`.
+- Create `.context/contexts/`, `.context/docs/`, `.context/plans/`, and
+  `.context/sources/{jira,slack,vimeo,meet}/` as the default scaffold.
+- When an agent inspects an external source, persist the useful retrieved
+  information under `.context/sources/<provider>/` during the same task. Keep
+  exactly one document per Slack channel and update it on later requests.
 - Write every file under `.context/` in English, even when the user or task
-  uses another language. Preserve exact identifiers and required quotations.
+  uses another language, except source records under `.context/sources/`, which
+  may use English or the source's original language. Preserve exact identifiers
+  and required quotations.
 - Add `/.context/` to `.git/info/exclude`; do not modify tracked `.gitignore`
   for personal context.
 - Never modify tracked `AGENTS.md`, `CLAUDE.md`, `docs/`, or `plans/` merely to

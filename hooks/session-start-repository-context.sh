@@ -17,14 +17,19 @@ missing=()
 [ -f "${local_root}/AGENTS.md" ] || missing+=(".context/AGENTS.md")
 [ -L "${local_root}/CLAUDE.md" ] && [ "$(readlink "${local_root}/CLAUDE.md")" = "AGENTS.md" ] || missing+=(".context/CLAUDE.md -> AGENTS.md")
 [ -f "${local_root}/CHANGELOG.md" ] || missing+=(".context/CHANGELOG.md")
+[ -d "${local_root}/contexts" ] || missing+=(".context/contexts/")
+[ -d "${local_root}/docs" ] || missing+=(".context/docs/")
 [ -d "${local_root}/plans" ] || missing+=(".context/plans/")
+for provider in jira slack vimeo meet; do
+  [ -d "${local_root}/sources/${provider}" ] || missing+=(".context/sources/${provider}/")
+done
 
 if [ "${#missing[@]}" -eq 0 ]; then
-  context="Read ${local_root}/AGENTS.md as supplementary local context after repository-tracked instructions. Load only task-relevant files linked from it. Write every file under .context/ in English regardless of the conversation language. Start its non-blocking background remote synchronization for .context/CHANGELOG.md when delegation is available; never change the working tree or tracked files."
+  context="Read ${local_root}/AGENTS.md as supplementary local context after repository-tracked instructions. Load only task-relevant files linked from it. Write context documents in English regardless of the conversation language; source records may use English or the source's original language. When external Jira, Slack, Vimeo, or Meet data is inspected, persist useful retrieved information under .context/sources/ during the same task; maintain one document per Slack channel. Start its non-blocking background remote synchronization for .context/CHANGELOG.md when delegation is available; never change the working tree or tracked files."
 else
   list="$(printf '%s, ' "${missing[@]}")"
   list="${list%, }"
-  context="This repo is missing part of the local repository-context scaffold: ${list}. Use the repository-context skill to bootstrap it under .context/ only and write every file there in English regardless of the conversation language. Add /.context/ to .git/info/exclude, never modify remote/tracked CLAUDE.md, AGENTS.md, docs/, plans/, or .gitignore, and ask before creating INFRASTRUCTURE.md content that would require guessing."
+  context="This repo is missing part of the local repository-context scaffold: ${list}. Use the repository-context skill to bootstrap it under .context/ only. Write context documents in English regardless of the conversation language; source records may use English or the source's original language. Add /.context/ to .git/info/exclude, never modify remote/tracked CLAUDE.md, AGENTS.md, docs/, plans/, or .gitignore, and ask before creating INFRASTRUCTURE.md content that would require guessing."
 fi
 
 python3 -c '

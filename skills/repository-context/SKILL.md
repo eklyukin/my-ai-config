@@ -1,6 +1,6 @@
 ---
 name: repository-context
-description: Maintains conflict-free local repository context for Claude and Codex under .context/, with .context/AGENTS.md as the canonical map, CLAUDE.md as its symlink, selective context files, infrastructure notes, implementation plans, and a remote-aware local changelog. Use when creating or updating local agent context, plans, infrastructure notes, changelog entries, or when repository-tracked CLAUDE.md, AGENTS.md, docs, or plans must remain untouched.
+description: Maintains conflict-free local repository context for Claude and Codex under .context/, with a canonical map, selective context, reusable source records, implementation plans, and a remote-aware changelog. Use when creating or updating local agent context, plans, infrastructure notes, Jira, Slack, Vimeo, or Meet research, changelog entries, or when repository-tracked documentation must remain untouched.
 ---
 
 # repository-context
@@ -15,7 +15,10 @@ Keep personal agent context under `.context/` so it cannot conflict with files f
 4. Treat remote/tracked instructions as authoritative when they conflict with `.context/`.
 5. Read `.context/AGENTS.md` as a map first. Load only the linked files needed for the current task; never load all of `.context/` by default.
 6. Report a conflict between remote and local instructions, then follow the remote instruction.
-7. Write every file under `.context/` in English, even when the user or task uses another language. Preserve exact identifiers and required quotations.
+7. Write repository context documents in English even when the user or task
+   uses another language. Source records under `.context/sources/` may instead
+   use the source's original language. Preserve exact identifiers and required
+   quotations.
 
 ## Target Structure
 
@@ -30,12 +33,21 @@ Keep personal agent context under `.context/` so it cannot conflict with files f
     │   ├── frontend.md
     │   ├── backend.md
     │   └── deployment.md
-    ├── docs/                     # optional personal notes
+    ├── docs/                     # reusable local documentation and notes
+    ├── sources/                  # persistent records retrieved from external sources
+    │   ├── jira/
+    │   ├── slack/                # exactly one document per Slack channel
+    │   ├── vimeo/
+    │   └── meet/
     └── plans/
         └── YYYY-MM-DD-<slug>.md
 ```
 
-Create only context and docs files that carry useful information. Create `.context/plans/` and `.context/CHANGELOG.md` with the scaffold. Ask before creating `INFRASTRUCTURE.md` when its content would require guessing.
+Create `.context/contexts/`, `.context/docs/`, `.context/plans/`, and every
+`.context/sources/<provider>/` directory with the scaffold, even when empty.
+Create files inside them only when they carry useful information. Create
+`.context/CHANGELOG.md` with the scaffold. Ask before creating
+`INFRASTRUCTURE.md` when its content would require guessing.
 
 ## Bootstrap Workflow
 
@@ -49,7 +61,9 @@ Create only context and docs files that carry useful information. Create `.conte
    ln -sfn AGENTS.md .context/CLAUDE.md
    ```
 
-6. Create `.context/CHANGELOG.md` and `.context/plans/` immediately when missing.
+6. Create `.context/CHANGELOG.md`, `.context/contexts/`, `.context/docs/`,
+   `.context/plans/`, and `.context/sources/{jira,slack,vimeo,meet}/`
+   immediately when missing.
 7. Create `.context/INFRASTRUCTURE.md` only from known or discoverable facts; ask the user about material unknowns instead of adding placeholders or guesses.
 8. Verify that `.context/` is ignored, the symlink resolves, and no tracked file changed.
 
@@ -61,7 +75,8 @@ Keep this canonical map short, normally under 100-150 lines. Include:
 
 - one or two paragraphs describing the repository;
 - a statement that remote/tracked instructions have priority;
-- links to `.context/CHANGELOG.md`, `.context/INFRASTRUCTURE.md`, and `.context/plans/` when they exist;
+- links to `.context/CHANGELOG.md`, `.context/INFRASTRUCTURE.md`,
+  `.context/docs/`, `.context/sources/`, and `.context/plans/` when they exist;
 - a list of available `.context/contexts/*.md` files with one-line descriptions;
 - the session-start remote synchronization instruction below;
 - genuinely universal local rules such as language or commit policy.
@@ -78,6 +93,51 @@ For each task:
 2. Read `.context/AGENTS.md`.
 3. Select only context files relevant to the task.
 4. Avoid reading unrelated context directories or documents.
+
+## Persistent Source Records
+
+Whenever the user asks an agent to inspect Jira, Slack, Vimeo, Meet, or another
+external source, the agent must persist the useful retrieved information under
+`.context/sources/` during the same task. Do not require the user to ask for a
+separate save operation.
+
+Before querying an external source, check for a matching saved document and use
+it when it is sufficiently current for the task. Query the source when the
+saved record is missing, stale, incomplete, or the user requests current data,
+then create or update the record. Never claim that cached data is current
+without checking its retrieval timestamp.
+
+Use these conventions:
+
+- Slack: `.context/sources/slack/<channel-slug>.md`. Maintain exactly one
+  document per channel, keyed by stable channel ID when available. Merge new
+  findings into that document instead of creating documents per request,
+  thread, date, or topic.
+- Jira: `.context/sources/jira/<stable-resource-slug>.md`, normally one file per
+  issue, project, board, or explicitly bounded report.
+- Vimeo: `.context/sources/vimeo/<video-id-or-stable-slug>.md`, normally one
+  file per video.
+- Meet: `.context/sources/meet/<meeting-id-or-date-slug>.md`, normally one file
+  per meeting.
+- Other providers: create `.context/sources/<provider>/` and use one document
+  per stable source resource.
+
+Each source document must be in English or in the source's original language.
+Do not translate retrieved content solely to satisfy the general English
+convention. A mixed-language source may retain the languages needed to preserve
+its meaning. Each document must include:
+
+- the provider and stable source identifier;
+- the source URL when available;
+- `Retrieved at` with an explicit timestamp and timezone;
+- the task-relevant facts, decisions, messages, transcript notes, or links;
+- enough provenance to distinguish retrieved facts from agent interpretation.
+
+Preserve exact names, identifiers, quotations, and URLs when required. Do not
+store credentials, tokens, cookies, or unrelated personal data. Keep documents
+concise and incrementally update them without discarding still-valid knowledge.
+Link newly created source documents from `.context/AGENTS.md` only when they
+are broadly useful; otherwise discover them through the provider directory.
 
 ## Plans
 
@@ -150,7 +210,8 @@ Never write secret values. Record the secret manager or vault and exact credenti
 - `git check-ignore -q .context/` succeeds.
 - `.context/CLAUDE.md` resolves to `AGENTS.md`.
 - `.context/AGENTS.md` links only to existing local files.
-- Every `.context/` document is written in English.
+- Every context document is written in English; source records use English or
+  the source's original language.
 - Only task-relevant local context was loaded.
 - No tracked remote documentation was modified.
 - Every completed implementation has a local plan record.
