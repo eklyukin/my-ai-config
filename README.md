@@ -141,7 +141,8 @@ ignored `.context/` directory:
 │   ├── jira/
 │   ├── slack/        # one document per channel
 │   ├── vimeo/
-│   └── meet/
+│   ├── meet/
+│   └── figma/        # one document per Figma file
 └── plans/
 ```
 
@@ -152,11 +153,12 @@ priority. The directory is excluded locally through `/.context/` in
 and `plans/` are not modified to store personal context. Context documents are
 written in English regardless of the conversation language; source records may
 instead retain the source's original language.
-When an agent retrieves Jira, Slack, Vimeo, or Meet information, it saves the
-useful result under `.context/sources/` for later tasks. Source records may use
-English or the source's original language and include their stable identifier,
-URL when available, and retrieval timestamp. Slack uses exactly one
-incrementally updated document per channel.
+When an agent retrieves Jira, Slack, Vimeo, Meet, or Figma information, it
+saves the useful result under `.context/sources/` for later tasks. Source
+records may use English or the source's original language and include their
+stable identifier, URL when available, and retrieval timestamp. Slack uses
+exactly one incrementally updated document per channel; Figma uses one per
+Figma file.
 
 The `grill-me` workflow interviews the user before implementation, records the
 confirmed agreement in `.context/plans/YYYY-MM-DD-<slug>.md`, and waits for a

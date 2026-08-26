@@ -1,6 +1,6 @@
 ---
 name: repository-context
-description: Maintains conflict-free local repository context for Claude and Codex under .context/, with a canonical map, selective context, reusable source records, implementation plans, and a remote-aware changelog. Use when creating or updating local agent context, plans, infrastructure notes, Jira, Slack, Vimeo, or Meet research, changelog entries, or when repository-tracked documentation must remain untouched.
+description: Maintains conflict-free local repository context for Claude and Codex under .context/, with a canonical map, selective context, reusable source records, implementation plans, and a remote-aware changelog. Use when creating or updating local agent context, plans, infrastructure notes, Jira, Slack, Vimeo, Meet, or Figma research, changelog entries, or when repository-tracked documentation must remain untouched.
 ---
 
 # repository-context
@@ -38,7 +38,8 @@ Keep personal agent context under `.context/` so it cannot conflict with files f
     │   ├── jira/
     │   ├── slack/                # exactly one document per Slack channel
     │   ├── vimeo/
-    │   └── meet/
+    │   ├── meet/
+    │   └── figma/                # exactly one document per Figma file
     └── plans/
         └── YYYY-MM-DD-<slug>.md
 ```
@@ -62,7 +63,7 @@ Create files inside them only when they carry useful information. Create
    ```
 
 6. Create `.context/CHANGELOG.md`, `.context/contexts/`, `.context/docs/`,
-   `.context/plans/`, and `.context/sources/{jira,slack,vimeo,meet}/`
+   `.context/plans/`, and `.context/sources/{jira,slack,vimeo,meet,figma}/`
    immediately when missing.
 7. Create `.context/INFRASTRUCTURE.md` only from known or discoverable facts; ask the user about material unknowns instead of adding placeholders or guesses.
 8. Verify that `.context/` is ignored, the symlink resolves, and no tracked file changed.
@@ -96,10 +97,10 @@ For each task:
 
 ## Persistent Source Records
 
-Whenever the user asks an agent to inspect Jira, Slack, Vimeo, Meet, or another
-external source, the agent must persist the useful retrieved information under
-`.context/sources/` during the same task. Do not require the user to ask for a
-separate save operation.
+Whenever the user asks an agent to inspect Jira, Slack, Vimeo, Meet, Figma, or
+another external source, the agent must persist the useful retrieved
+information under `.context/sources/` during the same task. Do not require the
+user to ask for a separate save operation.
 
 Before querying an external source, check for a matching saved document and use
 it when it is sufficiently current for the task. Query the source when the
@@ -119,6 +120,11 @@ Use these conventions:
   file per video.
 - Meet: `.context/sources/meet/<meeting-id-or-date-slug>.md`, normally one file
   per meeting.
+- Figma: `.context/sources/figma/<file-key-or-stable-slug>.md`. Maintain one
+  document per Figma file, keyed by the stable file key when available. Merge
+  newly inspected pages, frames, components, variables, design decisions, and
+  relevant node links into that document instead of creating per-request or
+  per-node files.
 - Other providers: create `.context/sources/<provider>/` and use one document
   per stable source resource.
 

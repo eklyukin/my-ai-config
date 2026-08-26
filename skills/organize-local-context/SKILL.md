@@ -60,6 +60,7 @@ structure, language, source records, and tracked-file boundaries.
    | Slack material | `.context/sources/slack/<channel-slug>.md` |
    | Vimeo material | `.context/sources/vimeo/<video-id-or-stable-slug>.md` |
    | Meet material | `.context/sources/meet/<meeting-id-or-date-slug>.md` |
+   | Figma material | `.context/sources/figma/<file-key-or-stable-slug>.md` |
 
 6. Preserve content and useful provenance while normalizing it to the target
    document convention. Context documents are English. Source records may use
@@ -68,10 +69,13 @@ structure, language, source records, and tracked-file boundaries.
    by stable channel ID when available and merge new material into the existing
    channel document instead of creating another file. Do not discard existing
    valid content during a merge.
-8. Update `.context/AGENTS.md` only when a moved document is broadly useful and
+8. For Figma, maintain exactly one document per file. Identify it by stable file
+   key when available and merge inspected pages, frames, components, variables,
+   design decisions, and relevant node links into the existing file document.
+9. Update `.context/AGENTS.md` only when a moved document is broadly useful and
    should be discoverable from the canonical map. Do not list every source
    record individually.
-9. Verify the result:
+10. Verify the result:
 
    ```bash
    git check-ignore -q .context/

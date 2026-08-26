@@ -20,12 +20,12 @@ missing=()
 [ -d "${local_root}/contexts" ] || missing+=(".context/contexts/")
 [ -d "${local_root}/docs" ] || missing+=(".context/docs/")
 [ -d "${local_root}/plans" ] || missing+=(".context/plans/")
-for provider in jira slack vimeo meet; do
+for provider in jira slack vimeo meet figma; do
   [ -d "${local_root}/sources/${provider}" ] || missing+=(".context/sources/${provider}/")
 done
 
 if [ "${#missing[@]}" -eq 0 ]; then
-  context="Read ${local_root}/AGENTS.md as supplementary local context after repository-tracked instructions. Load only task-relevant files linked from it. Write context documents in English regardless of the conversation language; source records may use English or the source's original language. When external Jira, Slack, Vimeo, or Meet data is inspected, persist useful retrieved information under .context/sources/ during the same task; maintain one document per Slack channel. Start its non-blocking background remote synchronization for .context/CHANGELOG.md when delegation is available; never change the working tree or tracked files."
+  context="Read ${local_root}/AGENTS.md as supplementary local context after repository-tracked instructions. Load only task-relevant files linked from it. Write context documents in English regardless of the conversation language; source records may use English or the source's original language. When external Jira, Slack, Vimeo, Meet, or Figma data is inspected, persist useful retrieved information under .context/sources/ during the same task; maintain one document per Slack channel and one per Figma file. Start its non-blocking background remote synchronization for .context/CHANGELOG.md when delegation is available; never change the working tree or tracked files."
 else
   list="$(printf '%s, ' "${missing[@]}")"
   list="${list%, }"
