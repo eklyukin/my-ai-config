@@ -10,6 +10,8 @@ user or corporate configuration.
 - shared coding and commit rules;
 - reusable engineering, review, planning, frontend, infrastructure, and Neo4j
   skills;
+- Archify for validated architecture, workflow, sequence, data-flow, and
+  lifecycle diagrams with standalone HTML and image/video exports;
 - Claude Code commands, agents, and lifecycle hooks;
 - Codex-compatible versions of the shared skills and instructions;
 - global browser MCP defaults:
@@ -25,6 +27,7 @@ user or corporate configuration.
 
 - macOS or another Unix-like environment with Bash;
 - Git;
+- Node.js 18 or newer for Archify and Node-based MCP servers;
 - Claude Code installed for Claude configuration;
 - Codex installed for Codex configuration;
 - `jq` for merging Claude hook registrations;
