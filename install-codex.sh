@@ -29,6 +29,7 @@ COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/
 SLACK_MCP_URL="https://mcp.slack.com/mcp"
 SLACK_MCP_TOKEN_ENV="SLACK_MCP_TOKEN"
 VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
+ATLASSIAN_MCP_URL="https://mcp.atlassian.com/v2/mcp"
 
 MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
 if [ -z "${MIGRATOR}" ]; then
@@ -344,6 +345,16 @@ codex mcp remove slack >/dev/null 2>&1 || true
 codex mcp add slack \
   --url "${SLACK_MCP_URL}" \
   --bearer-token-env-var "${SLACK_MCP_TOKEN_ENV}"
+
+# Atlassian uses browser-based OAuth. The v2 streamable HTTP endpoint replaces
+# the retired v1 SSE endpoint; keep a matching entry to preserve its session.
+if codex mcp get atlassian 2>/dev/null | grep -qF "url: ${ATLASSIAN_MCP_URL}"; then
+  echo "unchanged: Atlassian MCP (${ATLASSIAN_MCP_URL})"
+else
+  codex mcp remove atlassian >/dev/null 2>&1 || true
+  codex mcp add atlassian --url "${ATLASSIAN_MCP_URL}"
+  echo "NOTICE: Atlassian MCP endpoint changed; run 'codex mcp login atlassian' to authorize it" >&2
+fi
 
 # Vimeo uses browser-based OAuth, so no token or client secret is stored here.
 # Keep an existing matching entry to preserve its OAuth session across reruns.

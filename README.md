@@ -21,6 +21,7 @@ user or corporate configuration.
   - `chrome-devtools` for inspecting an existing Chrome session;
   - `computer-use` for Codex Desktop when its local client is available;
   - `slack` for read-only Slack access after supplying a user token;
+  - `atlassian` for Jira and Confluence through Atlassian Rovo MCP after OAuth;
   - `vimeo` for transcripts, video metadata, and analytics after OAuth login;
 - the `.context/` convention for conflict-free, repository-local personal
   context and implementation plans.
@@ -69,8 +70,8 @@ The installer also:
 
 - registers this repository's Claude hooks in `~/.claude/settings.json` while
   preserving unrelated settings;
-- installs `playwright`, `chrome-devtools`, and `vimeo` as user-scoped Claude
-  MCP servers.
+- installs `playwright`, `chrome-devtools`, `atlassian`, and `vimeo` as
+  user-scoped Claude MCP servers.
 
 Then install the Codex configuration:
 
@@ -106,10 +107,10 @@ claude mcp list
 codex mcp list
 ```
 
-The defaults should include `playwright`, `chrome-devtools`, and `vimeo` in both
-clients, plus `computer-use` in Codex when Codex Desktop provides the local
-client and `slack` in Codex. Vimeo requires a one-time OAuth login in each
-client. Slack becomes operational after
+The defaults should include `playwright`, `chrome-devtools`, `atlassian`, and
+`vimeo` in both clients, plus `computer-use` in Codex when Codex Desktop
+provides the local client and `slack` in Codex. Atlassian and Vimeo require a
+one-time OAuth login in each client. Slack becomes operational after
 `SLACK_MCP_TOKEN` is configured as described in the
 [Slack MCP setup guide](docs/slack-mcp.md).
 
@@ -213,10 +214,10 @@ require manual compatibility review.
 The repository owns only the Claude symlinks recorded in
 `~/.claude/.my-ai-config-manifest`, its hook command registrations listed in
 `HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright`,
-`chrome-devtools`, and `vimeo`, the marked `my-ai-config-local-context`,
+`chrome-devtools`, `atlassian`, and `vimeo`, the marked `my-ai-config-local-context`,
 `my-ai-config-browser`, and `my-ai-config-jira-workflow` blocks in
-`~/AGENTS.md`, the Codex MCP entries named `computer-use`, `slack`, and
-`vimeo`, and a converted
+`~/AGENTS.md`, the Codex MCP entries named `computer-use`, `slack`, `atlassian`,
+and `vimeo`, and a converted
 Codex skill at `~/.agents/skills/<name>` only when the corresponding
 `~/.claude/skills/<name>` symlink is recorded in the manifest and resolves
 inside this repository. All other configuration must be preserved or restored

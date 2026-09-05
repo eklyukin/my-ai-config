@@ -19,6 +19,7 @@ MANAGED_DIRS=(rules skills agents commands hooks)
 # MCP servers owned by this repo and installed globally for Claude Code.
 # install-codex.sh migrates them into Codex and adds Codex-native hosted MCPs.
 VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
+ATLASSIAN_MCP_URL="https://mcp.atlassian.com/v2/mcp"
 
 # hooks/<script>=<Event> it needs registered under in settings.json. Plain array,
 # not an associative one — the default bash on macOS (3.2) predates declare -A.
@@ -98,6 +99,13 @@ if command -v claude >/dev/null 2>&1; then
 
   install_global_mcp playwright npx -y @playwright/mcp@latest
   install_global_mcp chrome-devtools npx -y chrome-devtools-mcp@latest
+  if claude mcp get atlassian 2>/dev/null | grep -qF "URL: ${ATLASSIAN_MCP_URL}"; then
+    echo "unchanged: Atlassian MCP (${ATLASSIAN_MCP_URL})"
+  else
+    claude mcp remove --scope user atlassian >/dev/null 2>&1 || true
+    claude mcp add --scope user --transport http atlassian "${ATLASSIAN_MCP_URL}"
+    echo "NOTICE: Atlassian MCP endpoint changed; run 'claude mcp login atlassian' to authorize it" >&2
+  fi
   if claude mcp get vimeo 2>/dev/null | grep -qF "URL: ${VIMEO_MCP_URL}"; then
     echo "unchanged: Vimeo MCP (${VIMEO_MCP_URL})"
   else
