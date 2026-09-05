@@ -76,7 +76,7 @@ No .gitignore verification needed - outside project entirely.
 
 ### 1. Resolve the Branch and Base
 
-Read the matching `.context/plans/` document when present. If it contains a linked Jira issue, use the exact issue key as the branch name, for example `PROJ-121`; never add `feat/`, `fix/`, `codex/`, or a descriptive slug. If the issue has a parent epic implemented in this repository, use the exact epic key, for example `PROJ-100`, as the base branch. Otherwise use the repository's normal default branch.
+Read the matching `.context/plans/` document when present. The home Jira project is `IEO`. If the plan contains a linked Jira issue, use the exact issue key as the branch name, for example `IEO-121`; never add `feat/`, `fix/`, `codex/`, or a descriptive slug. If the issue has a parent epic implemented in this repository, use the exact epic key, for example `IEO-100`, as the base branch. Otherwise use the repository's normal default branch.
 
 Fetch and inspect local and remote refs before creating either branch. Reuse an existing branch safely and do not overwrite or reset it. When an active implementation plan has no Jira link, remind the user once and offer the `jira-worklog` skill; do not create a Jira issue without a preview and confirmation. Repository-tracked branch instructions take priority if they conflict.
 

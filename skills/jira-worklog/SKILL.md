@@ -9,11 +9,13 @@ Keep Jira aligned with the work actually planned and performed in the repository
 
 Write every Jira-facing text field in English, including summaries, descriptions, acceptance criteria, comments, labels with natural-language content, and transition notes. Translate the confirmed plan content when necessary while preserving exact identifiers, code names, URLs, and required quotations. This does not change the source-record language convention under `.context/sources/`.
 
+The home Jira space/project is `IEO`. Search `IEO` first and create new Jira work there by default. Use another project only when the user explicitly selects it or the work is already linked to an existing issue elsewhere; never infer a different project from repository names alone.
+
 ## Load Context
 
 1. Read repository-tracked instructions first.
 2. Read only the relevant `.context/AGENTS.md` links, implementation plan, and `.context/contexts/jira.md` when they exist.
-3. Discover Jira project, issue types, workflows, and existing issues with read-only calls. Do not guess values that cannot be discovered.
+3. Treat `IEO` as the default project, then discover its issue types, workflows, and existing issues with read-only calls. Do not guess values that cannot be discovered.
 4. Never read credentials from files or store tokens, cookies, or secrets in `.context/`.
 
 `.context/contexts/jira.md` may contain non-secret defaults such as the Jira site, project key, issue type, status mapping, and preferred default branch. Create or update it only with confirmed facts.
@@ -28,17 +30,17 @@ Write every Jira-facing text field in English, including summaries, descriptions
 
 1. Read the confirmed plan and search Jira for possible duplicates using its title, repository, epic, and relevant identifiers.
 2. Prefer linking an existing matching issue over creating a duplicate.
-3. If no issue matches, prepare a creation preview containing project, issue type, summary, parent epic when applicable, description, acceptance criteria, and relevant links.
-4. Show the proposed link or creation preview and wait for explicit confirmation before any Jira write.
+3. If no issue matches, prepare a creation preview for `IEO` containing project, issue type, summary, parent epic when applicable, description, acceptance criteria, and relevant links.
+4. Show the proposed link or creation preview and wait for explicit confirmation immediately before creating anything in Jira. Approval to plan, implement, publish generally, or perform an earlier Jira action is not creation approval and must not be reused.
 5. After the confirmed write succeeds, add or update this section in the plan:
 
 ```markdown
 ## Jira
-- Issue: PROJ-121
-- URL: https://example.atlassian.net/browse/PROJ-121
-- Parent epic: PROJ-100
-- Repository branch: PROJ-121
-- Target branch: PROJ-100
+- Issue: IEO-121
+- URL: https://example.atlassian.net/browse/IEO-121
+- Parent epic: IEO-100
+- Repository branch: IEO-121
+- Target branch: IEO-100
 - Publication status: Linked
 ```
 
@@ -60,8 +62,8 @@ Reconcile the plan's Implementation and Status sections first. Verify the test a
 
 When repository instructions do not impose a conflicting convention:
 
-- Name an issue branch exactly after its Jira key: `PROJ-121`.
-- Name an epic branch exactly after its Jira key: `PROJ-100`.
+- Name an issue branch exactly after its Jira key: `IEO-121`.
+- Name an epic branch exactly after its Jira key: `IEO-100`.
 - Do not add `feat/`, `fix/`, `codex/`, a description slug, or another prefix.
 - If the issue belongs to an epic and both are implemented in the same repository, create the issue branch from the epic branch and target the issue PR or merge to the epic branch.
 - Target the epic branch to the repository's normal default branch when completing the epic.
@@ -72,4 +74,4 @@ Fetch and inspect both local and remote branches before creating one. Reuse an e
 
 ## Approval Boundary
 
-Read-only Jira searches and local evidence gathering do not require confirmation. Always show a preview and receive explicit confirmation before creating or editing an issue, commenting, transitioning status, changing assignments or relationships, pushing a branch, opening a PR, or merging.
+Read-only Jira searches and local evidence gathering do not require confirmation. Creating any Jira object always requires a fresh, explicit approval after the complete creation preview is shown. Never treat approval of a plan, implementation, skill invocation, or prior Jira mutation as approval to create. Also show a preview and receive explicit confirmation before editing an issue, commenting, transitioning status, or changing assignments or relationships. Pushes, pull requests, and merges retain their normal confirmation requirements.

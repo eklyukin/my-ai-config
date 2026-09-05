@@ -177,7 +177,9 @@ a new issue after showing a preview and receiving confirmation. It can prepare
 progress and completion updates from verified Git, test, and PR evidence. Jira
 summaries, descriptions, acceptance criteria, comments, and transition notes
 are always written in English. Jira
-issue and epic branches use the exact Jira key (`PROJ-121` and `PROJ-100`): an
+work is created in the home `IEO` project by default and only after a complete
+preview receives fresh, explicit approval. Issue and epic branches use the
+exact Jira key (`IEO-121` and `IEO-100`): an
 issue branch targets its epic branch in the same repository, and the epic
 branch targets the repository's normal default branch. Store only non-secret
 Jira defaults in `.context/contexts/jira.md`; retrieved issue records belong in
