@@ -12,6 +12,8 @@ user or corporate configuration.
   skills;
 - Archify for validated architecture, workflow, sequence, data-flow, and
   lifecycle diagrams with standalone HTML and image/video exports;
+- a Jira worklog workflow that links plans, visible progress, and Jira-key
+  branches without performing unreviewed remote writes;
 - Claude Code commands, agents, and lifecycle hooks;
 - Codex-compatible versions of the shared skills and instructions;
 - global browser MCP defaults:
@@ -81,9 +83,9 @@ Codex-native settings that the migration tool does not own. In particular, it
 preserves project trust levels, Codex MCP servers, marketplaces, plugins,
 feature flags, shell policy, and the corporate Neuronet instruction block. It
 also copies supporting files referenced by shared skills, installs the shared
-`.context/` discovery rule, and registers Codex Desktop's `computer-use` MCP
-when available, plus the hosted Slack and Vimeo MCP endpoints without storing
-credentials in `~/.codex/config.toml`.
+`.context/`, existing-browser, and Jira visibility rules, and registers Codex
+Desktop's `computer-use` MCP when available, plus the hosted Slack and Vimeo
+MCP endpoints without storing credentials in `~/.codex/config.toml`.
 
 Slack needs a separately created user token before it can be used. Follow the
 [Slack MCP setup guide](docs/slack-mcp.md) to create a least-privilege
@@ -98,6 +100,8 @@ Check that the expected skills and MCP servers are visible:
 ```bash
 test -f ~/.claude/skills/grill-me/SKILL.md
 test -f ~/.agents/skills/grill-me/SKILL.md
+test -f ~/.claude/skills/jira-worklog/SKILL.md
+test -f ~/.agents/skills/jira-worklog/SKILL.md
 claude mcp list
 codex mcp list
 ```
@@ -167,6 +171,17 @@ The `grill-me` workflow interviews the user before implementation, records the
 confirmed agreement in `.context/plans/YYYY-MM-DD-<slug>.md`, and waits for a
 separate instruction before changing product code.
 
+The `jira-worklog` skill can link that plan to an existing Jira issue or create
+a new issue after showing a preview and receiving confirmation. It can prepare
+progress and completion updates from verified Git, test, and PR evidence. Jira
+summaries, descriptions, acceptance criteria, comments, and transition notes
+are always written in English. Jira
+issue and epic branches use the exact Jira key (`PROJ-121` and `PROJ-100`): an
+issue branch targets its epic branch in the same repository, and the epic
+branch targets the repository's normal default branch. Store only non-secret
+Jira defaults in `.context/contexts/jira.md`; retrieved issue records belong in
+`.context/sources/jira/`.
+
 ## Adding or updating configuration
 
 Add content to the matching repository directory:
@@ -198,9 +213,10 @@ require manual compatibility review.
 The repository owns only the Claude symlinks recorded in
 `~/.claude/.my-ai-config-manifest`, its hook command registrations listed in
 `HOOK_EVENTS`, the user-scoped Claude MCP entries named `playwright`,
-`chrome-devtools`, and `vimeo`, the marked `my-ai-config-local-context` and
-`my-ai-config-browser` blocks in `~/AGENTS.md`, the Codex MCP entries named
-`computer-use`, `slack`, and `vimeo`, and a converted
+`chrome-devtools`, and `vimeo`, the marked `my-ai-config-local-context`,
+`my-ai-config-browser`, and `my-ai-config-jira-workflow` blocks in
+`~/AGENTS.md`, the Codex MCP entries named `computer-use`, `slack`, and
+`vimeo`, and a converted
 Codex skill at `~/.agents/skills/<name>` only when the corresponding
 `~/.claude/skills/<name>` symlink is recorded in the manifest and resolves
 inside this repository. All other configuration must be preserved or restored

@@ -74,13 +74,19 @@ No .gitignore verification needed - outside project entirely.
 
 ## Creation Steps
 
-### 1. Detect Project Name
+### 1. Resolve the Branch and Base
+
+Read the matching `.context/plans/` document when present. If it contains a linked Jira issue, use the exact issue key as the branch name, for example `PROJ-121`; never add `feat/`, `fix/`, `codex/`, or a descriptive slug. If the issue has a parent epic implemented in this repository, use the exact epic key, for example `PROJ-100`, as the base branch. Otherwise use the repository's normal default branch.
+
+Fetch and inspect local and remote refs before creating either branch. Reuse an existing branch safely and do not overwrite or reset it. When an active implementation plan has no Jira link, remind the user once and offer the `jira-worklog` skill; do not create a Jira issue without a preview and confirmation. Repository-tracked branch instructions take priority if they conflict.
+
+### 2. Detect Project Name
 
 ```bash
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
 
-### 2. Create Worktree
+### 3. Create Worktree
 
 ```bash
 # Determine full path
@@ -94,11 +100,14 @@ case $LOCATION in
 esac
 
 # Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
+# For a new branch, BASE_BRANCH is the linked epic branch or default branch.
+git worktree add "$path" -b "$BRANCH_NAME" "$BASE_BRANCH"
 cd "$path"
 ```
 
-### 3. Run Project Setup
+When the branch already exists, attach it without `-b`. Never guess which divergent local or remote branch is canonical.
+
+### 4. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -117,7 +126,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-### 4. Verify Clean Baseline
+### 5. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -133,7 +142,7 @@ go test ./...
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 6. Report Location
 
 ```
 Worktree ready at <full-path>

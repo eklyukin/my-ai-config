@@ -61,12 +61,16 @@ Known risks; there should be no unresolved blocker hidden here.
 ## Implementation Outline
 Ordered implementation and verification approach.
 
+## Jira
+- Issue: Not linked
+- Parent epic: Not determined
+
 ## Status
 Ready for implementation (YYYY-MM-DD)
 ```
 
-7. Show the user the created plan path and a concise summary.
-8. Stop and wait for a separate implementation instruction. Creating the plan is not authorization to implement it.
+7. If the work is already linked to Jira, replace the Jira placeholders with confirmed issue data. Otherwise, show the user the created plan path, a concise summary, and offer to use `jira-worklog` to link or publish it. Do not create a Jira issue without a separate preview and explicit confirmation.
+8. Stop and wait for a separate implementation instruction. Creating the plan is not authorization to implement it or publish it to Jira.
 
 If the `.context/` scaffold is missing or inconsistent, follow the installed `repository-context` rules to bootstrap or repair it without touching remote/tracked documentation.
 

@@ -54,8 +54,8 @@ This repository may create, replace, or remove only:
 - Claude hook command registrations explicitly listed in `HOOK_EVENTS`;
 - user-scoped Claude MCP entries named `playwright`, `chrome-devtools`, and
   `vimeo`;
-- the marked `my-ai-config-local-context` and `my-ai-config-browser` blocks in
-  `~/AGENTS.md`;
+- the marked `my-ai-config-local-context`, `my-ai-config-browser`, and
+  `my-ai-config-jira-workflow` blocks in `~/AGENTS.md`;
 - the Codex MCP entries named `computer-use`, `slack`, and `vimeo` installed by
   `install-codex.sh`;
 - a converted Codex skill at `~/.agents/skills/<name>` only when the matching
@@ -77,6 +77,9 @@ Personal context for another repository belongs under that repository's ignored
 - `.context/CLAUDE.md` is a symlink to `AGENTS.md`.
 - Load only task-relevant files linked from `.context/AGENTS.md`.
 - Store implementation plans in `.context/plans/`.
+- Store non-secret Jira defaults in `.context/contexts/jira.md` when needed.
+- Link non-trivial implementation plans to Jira through the `jira-worklog`
+  workflow; all Jira writes require a preview and explicit confirmation.
 - Store the remote-aware local changelog in `.context/CHANGELOG.md`.
 - Create `.context/contexts/`, `.context/docs/`, `.context/plans/`, and
   `.context/sources/{jira,slack,vimeo,meet,figma}/` as the default scaffold.

@@ -24,6 +24,7 @@ AGENTS_MD="${HOME}/AGENTS.md"
 CONFIG_TOML="${CODEX_HOME}/config.toml"
 LOCAL_CONTEXT_RULE="${CLAUDE_HOME}/rules/local-context.md"
 BROWSER_RULE="${CLAUDE_HOME}/rules/existing-browser.md"
+JIRA_WORKFLOW_RULE="${CLAUDE_HOME}/rules/jira-workflow.md"
 COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
 SLACK_MCP_URL="https://mcp.slack.com/mcp"
 SLACK_MCP_TOKEN_ENV="SLACK_MCP_TOKEN"
@@ -228,6 +229,34 @@ else:
 open(agents_path, "w").write(agents.strip() + "\n")
 PYEOF
   echo "repaired: ${AGENTS_MD} (installed existing-browser rule)"
+fi
+
+# --- install the shared Jira visibility rule for Codex ---
+if [ -f "${JIRA_WORKFLOW_RULE}" ] && [ -f "${AGENTS_MD}" ]; then
+  python3 - "${AGENTS_MD}" "${JIRA_WORKFLOW_RULE}" <<'PYEOF'
+import re
+import sys
+
+agents_path, rule_path = sys.argv[1], sys.argv[2]
+agents = open(agents_path).read().rstrip("\n")
+rule = open(rule_path).read().strip()
+block = (
+    "<!-- my-ai-config-jira-workflow:start -->\n"
+    + rule
+    + "\n<!-- my-ai-config-jira-workflow:end -->"
+)
+pattern = re.compile(
+    r"\n?<!-- my-ai-config-jira-workflow:start -->.*?"
+    r"<!-- my-ai-config-jira-workflow:end -->",
+    re.DOTALL,
+)
+if pattern.search(agents):
+    agents = pattern.sub("\n\n" + block, agents, count=1)
+else:
+    agents += "\n\n" + block
+open(agents_path, "w").write(agents.strip() + "\n")
+PYEOF
+  echo "repaired: ${AGENTS_MD} (installed Jira visibility rule)"
 fi
 
 # --- repair config.toml: re-add project trust levels, drop invalid model id ---

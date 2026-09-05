@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Reconcile plan → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Reconcile plan and Jira → Resolve target → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -45,24 +45,33 @@ Check `.context/plans/` for a file covering this work (see the `repository-conte
 - **A plan exists but has no Implementation section filled in:** Fill it in — what was actually built, any deviations from the original design and why, follow-ups.
 - **A plan exists and is already up to date:** Nothing to do here.
 
-### Step 3: Determine Base Branch
+### Step 3: Reconcile Jira Visibility
+
+Read the plan's Jira section and verify that its issue key, parent epic, repository branch, and target branch match reality.
+
+- If the plan is linked, use `jira-worklog` to prepare a progress or finish preview from verified implementation, test, and PR evidence. Wait for explicit confirmation before commenting on or transitioning the Jira issue.
+- If the plan is not linked, remind the user once and offer to publish or link it with `jira-worklog`. This reminder does not by itself block technical branch completion.
+
+### Step 4: Determine Target Branch
+
+If the current branch is a Jira issue key and its linked issue belongs to an epic implemented in this repository, the target branch is the exact epic key. The issue PR or merge targets that epic branch. When finishing the epic branch, target the repository's normal default branch. A Jira issue without an epic targets the normal default branch.
 
 ```bash
-# Try common base branches
+# Fallback when no linked Jira relationship determines the target
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from main - is that correct?"
+Check local and remote refs before acting. Do not infer an epic solely from similarly named branches. Repository-tracked branch instructions take priority if they conflict.
 
-### Step 4: Present Options
+### Step 5: Present Options
 
 Present exactly these 4 options:
 
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
+1. Merge back to <target-branch> locally
+2. Push and create a Pull Request targeting <target-branch>
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
 
@@ -71,13 +80,13 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 5: Execute Choice
+### Step 6: Execute Choice
 
 #### Option 1: Merge Locally
 
 ```bash
-# Switch to base branch
-git checkout <base-branch>
+# Switch to target branch
+git checkout <target-branch>
 
 # Pull latest
 git pull
@@ -92,7 +101,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 6)
+Then: Cleanup worktree (Step 7)
 
 #### Option 2: Push and Create PR
 
@@ -101,7 +110,7 @@ Then: Cleanup worktree (Step 6)
 git push -u origin <feature-branch>
 
 # Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+gh pr create --base <target-branch> --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 
@@ -111,7 +120,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 6)
+Then: Cleanup worktree (Step 7)
 
 #### Option 3: Keep As-Is
 
@@ -135,13 +144,13 @@ Wait for exact confirmation.
 
 If confirmed:
 ```bash
-git checkout <base-branch>
+git checkout <target-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 6)
+Then: Cleanup worktree (Step 7)
 
-### Step 6: Cleanup Worktree
+### Step 7: Cleanup Worktree
 
 **For Options 1, 2, 4:**
 
