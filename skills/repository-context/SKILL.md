@@ -97,10 +97,14 @@ For each task:
 
 ## Persistent Source Records
 
-Whenever the user asks an agent to inspect Jira, Slack, Vimeo, Meet, Figma, or
-another external source, the agent must persist the useful retrieved
-information under `.context/sources/` during the same task. Do not require the
-user to ask for a separate save operation.
+Whenever the user asks an agent to inspect or mutate Jira, Slack, Vimeo, Meet,
+Figma, or another external source, the agent must persist the useful retrieved
+or resulting information under `.context/sources/` during the same task. Do
+not require the user to ask for a separate save operation or merely offer to
+save it later. For Jira specifically, every successfully created, read, or
+updated issue must create or refresh `.context/sources/jira/<ISSUE-KEY>.md`,
+even when Jira was accessed directly through Atlassian MCP without explicitly
+invoking `jira-worklog`.
 
 Before querying an external source, check for a matching saved document and use
 it when it is sufficiently current for the task. Query the source when the
@@ -114,8 +118,9 @@ Use these conventions:
   document per channel, keyed by stable channel ID when available. Merge new
   findings into that document instead of creating documents per request,
   thread, date, or topic.
-- Jira: `.context/sources/jira/<stable-resource-slug>.md`, normally one file per
-  issue, project, board, or explicitly bounded report.
+- Jira: `.context/sources/jira/<ISSUE-KEY>.md` for an issue, including an Epic.
+  Use a stable resource slug only for a project, board, or explicitly bounded
+  report. Update the existing issue file after later reads or mutations.
 - Vimeo: `.context/sources/vimeo/<video-id-or-stable-slug>.md`, normally one
   file per video.
 - Meet: `.context/sources/meet/<meeting-id-or-date-slug>.md`, normally one file

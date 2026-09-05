@@ -83,9 +83,12 @@ Personal context for another repository belongs under that repository's ignored
 - Store the remote-aware local changelog in `.context/CHANGELOG.md`.
 - Create `.context/contexts/`, `.context/docs/`, `.context/plans/`, and
   `.context/sources/{jira,slack,vimeo,meet,figma}/` as the default scaffold.
-- When an agent inspects an external source, persist the useful retrieved
-  information under `.context/sources/<provider>/` during the same task. Keep
-  exactly one document per Slack channel and update it on later requests.
+- When an agent inspects or mutates an external source, persist the useful
+  retrieved or resulting information under `.context/sources/<provider>/`
+  during the same task. Every successfully created, read, or updated Jira issue
+  must create or refresh `.context/sources/jira/<ISSUE-KEY>.md`, including
+  after direct Atlassian MCP use. Keep exactly one document per Slack channel
+  and update it on later requests.
 - Write every file under `.context/` in English, even when the user or task
   uses another language, except source records under `.context/sources/`, which
   may use English or the source's original language. Preserve exact identifiers

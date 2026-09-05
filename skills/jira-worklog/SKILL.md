@@ -1,6 +1,6 @@
 ---
 name: jira-worklog
-description: Link implementation plans to Jira, create or update Jira work after approval, and coordinate Jira-key branches. Use when publishing planned work to Jira, recording progress, finishing a Jira task, or making repository work visible in Jira.
+description: Create, read, link, or update Jira work after approval, persist every touched Jira issue under .context/sources/jira/, and coordinate Jira-key branches. Use for any Jira operation, including direct Atlassian MCP requests that do not explicitly mention this skill.
 ---
 
 # Jira Worklog
@@ -26,6 +26,14 @@ The home Jira space/project is `IEO`. Search `IEO` first and create new Jira wor
 - **Progress:** summarize verified implementation progress and optionally update the linked issue.
 - **Finish:** reconcile the implementation, tests, and integration state before proposing a final Jira comment or transition.
 
+## Mandatory Local Record
+
+After every successful Jira create, read, or update operation, create or update `.context/sources/jira/<ISSUE-KEY>.md` during the same task. This is a required post-step even when the Jira operation was performed directly through Atlassian MCP and `jira-worklog` was not explicitly invoked. Do not merely offer or remind the user to save it.
+
+Bootstrap the repository's `.context/` scaffold when necessary. Record the provider, issue key and type, URL, project, summary, current status, parent and relevant child relationships, retrieval timestamp with timezone, task-relevant facts, and provenance. Preserve confirmed existing information that remains valid, and refresh remote state when the mutation response is incomplete. Never invent missing fields or store credentials.
+
+When one active implementation plan clearly corresponds to the issue, update its `## Jira` section with the confirmed key, URL, parent, repository branch, target branch, and publication status. Do not modify an unrelated or ambiguous plan. Failure to write the local record must be reported explicitly; a successful Jira mutation alone does not complete the workflow.
+
 ## Publish or Link
 
 1. Read the confirmed plan and search Jira for possible duplicates using its title, repository, epic, and relevant identifiers.
@@ -46,7 +54,7 @@ The home Jira space/project is `IEO`. Search `IEO` first and create new Jira wor
 
 Use `None` for a confirmed absence of an epic. Do not invent placeholder keys or URLs.
 
-6. Persist the useful Jira record at `.context/sources/jira/<ISSUE-KEY>.md`. Include the stable issue key, URL, retrieval timestamp with timezone, summary, status, parent, relevant links, and provenance. Update the same file on later retrievals.
+6. Complete the mandatory local-record post-step above.
 
 ## Record Progress
 

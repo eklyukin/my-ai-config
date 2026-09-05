@@ -161,8 +161,11 @@ priority. The directory is excluded locally through `/.context/` in
 and `plans/` are not modified to store personal context. Context documents are
 written in English regardless of the conversation language; source records may
 instead retain the source's original language.
-When an agent retrieves Jira, Slack, Vimeo, Meet, or Figma information, it
-saves the useful result under `.context/sources/` for later tasks. Source
+When an agent retrieves or changes Jira, Slack, Vimeo, Meet, or Figma
+information, it saves the useful result under `.context/sources/` during the
+same task. Every Jira issue or Epic that is created, read, or updated creates
+or refreshes `.context/sources/jira/<ISSUE-KEY>.md`, including when Atlassian
+MCP is used directly without naming `jira-worklog`. Source
 records may use English or the source's original language and include their
 stable identifier, URL when available, and retrieval timestamp. Slack uses
 exactly one incrementally updated document per channel; Figma uses one per
