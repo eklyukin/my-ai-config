@@ -14,6 +14,8 @@ user or corporate configuration.
   lifecycle diagrams with standalone HTML and image/video exports;
 - a Jira worklog workflow that links plans, visible progress, and Jira-key
   branches without performing unreviewed remote writes;
+- a Slack work-update skill that drafts or polishes copy-ready progress updates
+  without posting them;
 - Claude Code commands, agents, and lifecycle hooks;
 - Codex-compatible versions of the shared skills and instructions;
 - global browser MCP defaults:
