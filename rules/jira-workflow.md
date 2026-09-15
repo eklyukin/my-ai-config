@@ -6,6 +6,8 @@ The home Jira space/project is `IEO`; search it first and create new Jira work t
 
 Write all Jira-facing text in English, including issue summaries, descriptions, acceptance criteria, comments, and transition notes. Preserve exact identifiers, code names, URLs, and required quotations.
 
+For Jira descriptions and comments, preserve paragraphs, sections, lists, and links as structured rendered content; never leave them collapsed into one continuous block of text. When Jira is accessed through the browser, save the content and visually inspect the rendered description or comment. Correct any lost paragraph breaks, headings, list structure, or links before considering the operation complete. This post-write formatting check does not bypass the required preview and explicit approval.
+
 When a Jira issue is linked and repository instructions do not conflict, name its branch exactly after the issue key, for example `IEO-121`. Do not add a type prefix, agent prefix, or descriptive slug. If the issue belongs to an epic in the same repository, use the epic key as the epic branch name, create the issue branch from it, and target issue integration to that epic branch. Integrate the epic branch into the repository's normal default branch. If there is no epic, branch from and target the normal default branch.
 
 Check local and remote branches before creating one. Reuse existing Jira-key branches safely. Pushes, pull requests, merges, Jira comments, issue creation, issue edits, and Jira transitions retain their normal confirmation requirements.

@@ -9,6 +9,8 @@ Keep Jira aligned with the work actually planned and performed in the repository
 
 Write every Jira-facing text field in English, including summaries, descriptions, acceptance criteria, comments, labels with natural-language content, and transition notes. Translate the confirmed plan content when necessary while preserving exact identifiers, code names, URLs, and required quotations. This does not change the source-record language convention under `.context/sources/`.
 
+Preserve readable Jira formatting in every description and comment. Keep paragraphs, headings or sections, lists, and links as separate structured elements instead of collapsing them into plain continuous text. When using the Jira browser UI, enter content in a format the editor supports, save it, then reopen or inspect the rendered result and visually verify that paragraphs, sections, lists, and links were preserved correctly. If formatting was flattened or broken, fix it before treating the Jira write as complete. This verification does not replace the required preview and explicit approval before the write.
+
 The home Jira space/project is `IEO`. Search `IEO` first and create new Jira work there by default. Use another project only when the user explicitly selects it or the work is already linked to an existing issue elsewhere; never infer a different project from repository names alone.
 
 ## Load Context
