@@ -30,6 +30,12 @@ SLACK_MCP_URL="https://mcp.slack.com/mcp"
 SLACK_MCP_TOKEN_ENV="SLACK_MCP_TOKEN"
 VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
 ATLASSIAN_MCP_URL="https://mcp.atlassian.com/v2/mcp"
+GITLAB_KEYCHAIN_SERVICE="my-ai-config.gitlab"
+GITLAB_KEYCHAIN_ACCOUNT="GITLAB_PERSONAL_ACCESS_TOKEN"
+GITLAB_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.gitlab" -a "GITLAB_PERSONAL_ACCESS_TOKEN" -w 2>/dev/null)" || { echo "GitLab token is missing from macOS Keychain" >&2; exit 1; }; exec env GITLAB_PERSONAL_ACCESS_TOKEN="$token" GITLAB_API_URL="https://gitlab.loc/api/v4" GITLAB_PERMISSION_MODE="readonly" npx -y @zereight/mcp-gitlab@latest'
+SERVICE_DESK_MARKETPLACE_URL="https://gitlab.loc/new-metasites/ai-infra.git"
+SERVICE_DESK_MARKETPLACE="xsolla-ai-infra"
+SERVICE_DESK_PLUGIN="xsolla-service-desk"
 
 MIGRATOR="$(find "${CODEX_HOME}/vendor_imports/skills" -maxdepth 6 -name migrate-to-codex.py 2>/dev/null | head -1)"
 if [ -z "${MIGRATOR}" ]; then
@@ -346,6 +352,20 @@ codex mcp add slack \
   --url "${SLACK_MCP_URL}" \
   --bearer-token-env-var "${SLACK_MCP_TOKEN_ENV}"
 
+# Load the GitLab PAT from macOS Keychain only when the MCP process starts.
+# The token has read_api scope and the server independently exposes only its
+# read-only toolset. No project filter is set, so normal GitLab permissions
+# determine which repositories are visible.
+if command -v security >/dev/null 2>&1 \
+  && security find-generic-password \
+    -s "${GITLAB_KEYCHAIN_SERVICE}" \
+    -a "${GITLAB_KEYCHAIN_ACCOUNT}" >/dev/null 2>&1; then
+  codex mcp remove gitlab >/dev/null 2>&1 || true
+  codex mcp add gitlab -- /bin/zsh -lc "${GITLAB_MCP_LAUNCHER}"
+else
+  echo "NOTICE: GitLab MCP requires a read-only token in macOS Keychain; follow ${REPO_DIR}/docs/gitlab-mcp.md" >&2
+fi
+
 # Atlassian uses browser-based OAuth. The v2 streamable HTTP endpoint replaces
 # the retired v1 SSE endpoint; keep a matching entry to preserve its session.
 if codex mcp get atlassian 2>/dev/null | grep -qF "url: ${ATLASSIAN_MCP_URL}"; then
@@ -370,6 +390,30 @@ if command -v launchctl >/dev/null 2>&1 \
   echo "configured: Slack MCP (${SLACK_MCP_TOKEN_ENV} is available to desktop apps)"
 else
   echo "NOTICE: Slack MCP requires ${SLACK_MCP_TOKEN_ENV}; follow ${REPO_DIR}/docs/slack-mcp.md" >&2
+fi
+
+# Install the optional internal Service Desk plugin after migration and repair.
+# It owns a separate Jira Service Management MCP server and can coexist with
+# the hosted Atlassian MCP above. Corporate GitLab access is optional: failure
+# must not prevent the rest of the personal configuration from installing.
+codex_plugins="$(codex plugin list 2>/dev/null || true)"
+if printf '%s\n' "${codex_plugins}" | awk -v plugin="${SERVICE_DESK_PLUGIN}@personal" '$1 == plugin && $2 == "installed," { found=1 } END { exit !found }'; then
+  echo "WARN: ${SERVICE_DESK_PLUGIN}@personal is already installed; remove it before installing ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}" >&2
+elif printf '%s\n' "${codex_plugins}" | awk -v plugin="${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}" '$1 == plugin && $2 == "installed," { found=1 } END { exit !found }'; then
+  echo "unchanged: Codex plugin ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}"
+else
+  if ! codex plugin marketplace list 2>/dev/null | grep -qF "${SERVICE_DESK_MARKETPLACE}"; then
+    if ! codex plugin marketplace add "${SERVICE_DESK_MARKETPLACE_URL}"; then
+      echo "WARN: cannot add internal marketplace ${SERVICE_DESK_MARKETPLACE}; continuing without ${SERVICE_DESK_PLUGIN}" >&2
+    fi
+  fi
+  if codex plugin marketplace list 2>/dev/null | grep -qF "${SERVICE_DESK_MARKETPLACE}"; then
+    if codex plugin add "${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}"; then
+      echo "installed: Codex plugin ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}"
+    else
+      echo "WARN: cannot install Codex plugin ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}; continuing" >&2
+    fi
+  fi
 fi
 
 echo "Done. Review ${CODEX_HOME}/migrate-to-codex-report.txt for remaining manual-review items."

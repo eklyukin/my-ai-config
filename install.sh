@@ -20,6 +20,12 @@ MANAGED_DIRS=(rules skills agents commands hooks)
 # install-codex.sh migrates them into Codex and adds Codex-native hosted MCPs.
 VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
 ATLASSIAN_MCP_URL="https://mcp.atlassian.com/v2/mcp"
+GITLAB_KEYCHAIN_SERVICE="my-ai-config.gitlab"
+GITLAB_KEYCHAIN_ACCOUNT="GITLAB_PERSONAL_ACCESS_TOKEN"
+GITLAB_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.gitlab" -a "GITLAB_PERSONAL_ACCESS_TOKEN" -w 2>/dev/null)" || { echo "GitLab token is missing from macOS Keychain" >&2; exit 1; }; exec env GITLAB_PERSONAL_ACCESS_TOKEN="$token" GITLAB_API_URL="https://gitlab.loc/api/v4" GITLAB_PERMISSION_MODE="readonly" npx -y @zereight/mcp-gitlab@latest'
+SERVICE_DESK_MARKETPLACE_URL="https://gitlab.loc/new-metasites/ai-infra.git"
+SERVICE_DESK_MARKETPLACE="xsolla-ai-infra"
+SERVICE_DESK_PLUGIN="xsolla-service-desk"
 
 # hooks/<script>=<Event> it needs registered under in settings.json. Plain array,
 # not an associative one — the default bash on macOS (3.2) predates declare -A.
@@ -99,6 +105,14 @@ if command -v claude >/dev/null 2>&1; then
 
   install_global_mcp playwright npx -y @playwright/mcp@latest
   install_global_mcp chrome-devtools npx -y chrome-devtools-mcp@latest
+  if command -v security >/dev/null 2>&1 \
+    && security find-generic-password \
+      -s "${GITLAB_KEYCHAIN_SERVICE}" \
+      -a "${GITLAB_KEYCHAIN_ACCOUNT}" >/dev/null 2>&1; then
+    install_global_mcp gitlab /bin/zsh -lc "${GITLAB_MCP_LAUNCHER}"
+  else
+    echo "NOTICE: GitLab MCP requires a read-only token in macOS Keychain; follow ${REPO_DIR}/docs/gitlab-mcp.md" >&2
+  fi
   if claude mcp get atlassian 2>/dev/null | grep -qF "URL: ${ATLASSIAN_MCP_URL}"; then
     echo "unchanged: Atlassian MCP (${ATLASSIAN_MCP_URL})"
   else
@@ -114,6 +128,33 @@ if command -v claude >/dev/null 2>&1; then
   fi
 else
   echo "WARN: claude CLI not found — skipping global Claude MCP installation" >&2
+fi
+
+# --- install the optional internal Xsolla Service Desk plugin for Claude Code ---
+# The plugin supplies its own skill and MCP server. Keep failures non-fatal so
+# this public configuration remains installable without the corporate network
+# or access to the internal GitLab repository. OAuth credentials stay local in
+# macOS Keychain and are never handled by this installer.
+if command -v claude >/dev/null 2>&1; then
+  claude_plugins="$(claude plugin list 2>/dev/null || true)"
+  if printf '%s\n' "${claude_plugins}" | grep -qF "${SERVICE_DESK_PLUGIN}@personal"; then
+    echo "WARN: ${SERVICE_DESK_PLUGIN}@personal is already installed; remove it before installing ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}" >&2
+  elif printf '%s\n' "${claude_plugins}" | grep -qF "${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}"; then
+    echo "unchanged: Claude plugin ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}"
+  else
+    if ! claude plugin marketplace list 2>/dev/null | grep -qF "${SERVICE_DESK_MARKETPLACE}"; then
+      if ! claude plugin marketplace add "${SERVICE_DESK_MARKETPLACE_URL}"; then
+        echo "WARN: cannot add internal marketplace ${SERVICE_DESK_MARKETPLACE}; continuing without ${SERVICE_DESK_PLUGIN}" >&2
+      fi
+    fi
+    if claude plugin marketplace list 2>/dev/null | grep -qF "${SERVICE_DESK_MARKETPLACE}"; then
+      if claude plugin install "${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}" --scope user --yes; then
+        echo "installed: Claude plugin ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}"
+      else
+        echo "WARN: cannot install Claude plugin ${SERVICE_DESK_PLUGIN}@${SERVICE_DESK_MARKETPLACE}; continuing" >&2
+      fi
+    fi
+  fi
 fi
 
 # --- register this repo's hook scripts under their required event in settings.json ---

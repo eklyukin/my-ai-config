@@ -24,7 +24,7 @@ preserve configuration outside the repository's explicit ownership boundary.
 - `hooks/`: Claude lifecycle hooks; Codex support depends on migration limits.
 - `install.sh`: installs repository-managed Claude symlinks and MCP defaults.
 - `install-codex.sh`: migrates shared configuration and restores Codex-native
-  settings.
+  settings, then installs optional repository-managed plugins.
 
 ## Editing rules
 
@@ -41,9 +41,9 @@ preserve configuration outside the repository's explicit ownership boundary.
    syntax and migration behavior.
 7. Keep global MCP defaults repository-managed and available from every project.
    The expected browser set is `playwright` and `chrome-devtools` for both
-   clients, the hosted Atlassian Rovo and Vimeo MCP endpoints for both clients,
-   plus Codex-specific `computer-use` when available and the hosted Slack MCP
-   endpoint without embedding its user token.
+   clients; both clients also receive read-only GitLab plus the hosted Atlassian
+   Rovo and Vimeo MCP endpoints. Codex additionally receives `computer-use`
+   when available and the hosted Slack MCP endpoint without embedding tokens.
 
 ## Ownership boundary
 
@@ -53,14 +53,18 @@ This repository may create, replace, or remove only:
   into this repository;
 - Claude hook command registrations explicitly listed in `HOOK_EVENTS`;
 - user-scoped Claude MCP entries named `playwright`, `chrome-devtools`,
-  `atlassian`, and `vimeo`;
+  `gitlab`, `atlassian`, and `vimeo`;
 - the marked `my-ai-config-local-context`, `my-ai-config-browser`, and
   `my-ai-config-jira-workflow` blocks in `~/AGENTS.md`;
-- the Codex MCP entries named `computer-use`, `slack`, `atlassian`, and `vimeo`
-  installed by `install-codex.sh`;
+- the Codex MCP entries named `computer-use`, `slack`, `gitlab`, `atlassian`,
+  and `vimeo` installed by `install-codex.sh`;
 - a converted Codex skill at `~/.agents/skills/<name>` only when the matching
   `~/.claude/skills/<name>` symlink is recorded in
   `~/.claude/.my-ai-config-manifest` and resolves inside this repository.
+- the `xsolla-ai-infra` plugin marketplace and
+  `xsolla-service-desk@xsolla-ai-infra` user installation in Claude Code and
+  Codex; OAuth client credentials and tokens remain outside repository
+  ownership in macOS Keychain.
 
 The Codex installer may temporarily regenerate shared files only when it first
 snapshots and then restores unrelated Codex-native sections. Corporate

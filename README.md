@@ -16,6 +16,8 @@ user or corporate configuration.
   branches without performing unreviewed remote writes;
 - a Slack work-update skill that drafts or polishes copy-ready progress updates
   without posting them;
+- the optional internal Xsolla Service Desk plugin for reading and submitting
+  Jira Service Management customer requests through Claude Code and Codex;
 - Claude Code commands, agents, and lifecycle hooks;
 - Codex-compatible versions of the shared skills and instructions;
 - global browser MCP defaults:
@@ -23,6 +25,7 @@ user or corporate configuration.
   - `chrome-devtools` for inspecting an existing Chrome session;
   - `computer-use` for Codex Desktop when its local client is available;
   - `slack` for read-only Slack access after supplying a user token;
+  - `gitlab` for read-only access to projects visible on internal GitLab;
   - `atlassian` for Jira and Confluence through Atlassian Rovo MCP after OAuth;
   - `vimeo` for transcripts, video metadata, and analytics after OAuth login;
 - the `.context/` convention for conflict-free, repository-local personal
@@ -32,11 +35,14 @@ user or corporate configuration.
 
 - macOS or another Unix-like environment with Bash;
 - Git;
-- Node.js 18 or newer for Archify and Node-based MCP servers;
+- Node.js 20 or newer for Archify, the optional Service Desk plugin, and
+  Node-based MCP servers;
 - Claude Code installed for Claude configuration;
 - Codex installed for Codex configuration;
 - `jq` for merging Claude hook registrations;
-- the curated `migrate-to-codex` skill available to Codex.
+- the curated `migrate-to-codex` skill available to Codex;
+- access to the internal GitLab repository and the corporate network for the
+  optional Xsolla Service Desk plugin.
 
 If `migrate-to-codex` is not installed, ask Codex to install the curated skill:
 
@@ -72,8 +78,10 @@ The installer also:
 
 - registers this repository's Claude hooks in `~/.claude/settings.json` while
   preserving unrelated settings;
-- installs `playwright`, `chrome-devtools`, `atlassian`, and `vimeo` as
-  user-scoped Claude MCP servers.
+- installs `playwright`, `chrome-devtools`, `gitlab`, `atlassian`, and `vimeo` as
+  user-scoped Claude MCP servers;
+- installs `xsolla-service-desk@xsolla-ai-infra` when its internal GitLab
+  marketplace is reachable.
 
 Then install the Codex configuration:
 
@@ -90,9 +98,22 @@ also copies supporting files referenced by shared skills, installs the shared
 Desktop's `computer-use` MCP when available, plus the hosted Slack and Vimeo
 MCP endpoints without storing credentials in `~/.codex/config.toml`.
 
+Both installers add the internal `xsolla-ai-infra` marketplace and install
+`xsolla-service-desk@xsolla-ai-infra` when `gitlab.loc` is reachable. Failure to
+reach the internal repository is non-fatal, so the rest of the configuration
+still installs. The plugin handles Jira Service Management customer portals;
+it does not replace the hosted Atlassian MCP used for ordinary Jira issues and
+Confluence. See the
+[Xsolla Service Desk setup guide](docs/xsolla-service-desk.md).
+
 Slack needs a separately created user token before it can be used. Follow the
 [Slack MCP setup guide](docs/slack-mcp.md) to create a least-privilege
 read-only token and make it available to Codex Desktop.
+
+Internal GitLab access uses a dedicated `read_api` personal access token stored
+in macOS Keychain. The installers expose GitLab's read-only MCP toolset to both
+clients without copying the token into their configuration files. Follow the
+[GitLab MCP setup guide](docs/gitlab-mcp.md).
 
 Both installers are designed to be re-run after pulling repository updates.
 
@@ -107,14 +128,18 @@ test -f ~/.claude/skills/jira-worklog/SKILL.md
 test -f ~/.agents/skills/jira-worklog/SKILL.md
 claude mcp list
 codex mcp list
+claude plugin list
+codex plugin list
 ```
 
-The defaults should include `playwright`, `chrome-devtools`, `atlassian`, and
-`vimeo` in both clients, plus `computer-use` in Codex when Codex Desktop
-provides the local client and `slack` in Codex. Atlassian and Vimeo require a
-one-time OAuth login in each client. Slack becomes operational after
+The defaults should include `playwright`, `chrome-devtools`, `gitlab`,
+`atlassian`, and `vimeo` in both clients, plus `computer-use` in Codex when
+Codex Desktop provides the local client and `slack` in Codex. Atlassian and
+Vimeo require a one-time OAuth login in each client. Slack becomes operational after
 `SLACK_MCP_TOKEN` is configured as described in the
 [Slack MCP setup guide](docs/slack-mcp.md).
+The plugin lists should also contain
+`xsolla-service-desk@xsolla-ai-infra` when internal GitLab access is available.
 
 ## Repository structure
 
