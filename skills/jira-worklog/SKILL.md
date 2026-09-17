@@ -66,7 +66,11 @@ Show the comment and any field or status changes before writing them. Apply only
 
 ## Finish Work
 
-Reconcile the plan's Implementation and Status sections first. Verify the test and integration evidence required by the repository. Then preview the final comment and proposed Jira transition. A successful local implementation does not imply authorization to transition or close the Jira issue; wait for confirmation immediately before those writes.
+Reconcile the plan's Implementation and Status sections first. Verify the test and integration evidence required by the repository. Collect the URLs of every relevant pull request or merge request that delivered the issue, including repository-specific requests when the work spans repositories.
+
+Before proposing a resolved or closed transition, inspect the issue's existing Jira remote links. Every relevant PR or MR URL must exist as a native Jira remote link; mentioning it in the final comment, description, or a plain web link is not sufficient. Add only missing links, preserve existing links, and use a meaningful title containing the repository and PR/MR identifier when the Jira API supports it. Do not close the issue while a known relevant PR or MR is missing from native remote links.
+
+Preview the missing remote-link additions together with the final comment and proposed Jira transition. These are Jira writes: wait for explicit confirmation immediately before applying them. After approval, create the missing remote links idempotently, verify that Jira returns or displays them, post the confirmed comment, and perform the confirmed transition. A successful local implementation does not imply authorization for any of these writes.
 
 ## Jira Branch Convention
 

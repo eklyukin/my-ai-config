@@ -20,6 +20,9 @@ MANAGED_DIRS=(rules skills agents commands hooks)
 # install-codex.sh migrates them into Codex and adds Codex-native hosted MCPs.
 VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
 ATLASSIAN_MCP_URL="https://mcp.atlassian.com/v2/mcp"
+SLACK_KEYCHAIN_SERVICE="my-ai-config.slack"
+SLACK_KEYCHAIN_ACCOUNT="SLACK_MCP_XOXP_TOKEN"
+SLACK_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.slack" -a "SLACK_MCP_XOXP_TOKEN" -w 2>/dev/null)" || { echo "Slack token is missing from macOS Keychain" >&2; exit 1; }; exec env SLACK_MCP_XOXP_TOKEN="$token" SLACK_MCP_ENABLED_TOOLS="channels_list,channels_me,conversations_history,conversations_replies,conversations_search_messages,conversations_unreads,usergroups_list,usergroups_me,users_search" npx -y slack-mcp-server@latest'
 GITLAB_KEYCHAIN_SERVICE="my-ai-config.gitlab"
 GITLAB_KEYCHAIN_ACCOUNT="GITLAB_PERSONAL_ACCESS_TOKEN"
 GITLAB_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.gitlab" -a "GITLAB_PERSONAL_ACCESS_TOKEN" -w 2>/dev/null)" || { echo "GitLab token is missing from macOS Keychain" >&2; exit 1; }; exec env GITLAB_PERSONAL_ACCESS_TOKEN="$token" GITLAB_API_URL="https://gitlab.loc/api/v4" GITLAB_PERMISSION_MODE="readonly" npx -y @zereight/mcp-gitlab@latest'
@@ -105,6 +108,14 @@ if command -v claude >/dev/null 2>&1; then
 
   install_global_mcp playwright npx -y @playwright/mcp@latest
   install_global_mcp chrome-devtools npx -y chrome-devtools-mcp@latest
+  if command -v security >/dev/null 2>&1 \
+    && security find-generic-password \
+      -s "${SLACK_KEYCHAIN_SERVICE}" \
+      -a "${SLACK_KEYCHAIN_ACCOUNT}" >/dev/null 2>&1; then
+    install_global_mcp slack /bin/zsh -lc "${SLACK_MCP_LAUNCHER}"
+  else
+    echo "NOTICE: Slack MCP requires a read-only token in macOS Keychain; follow ${REPO_DIR}/docs/slack-mcp.md" >&2
+  fi
   if command -v security >/dev/null 2>&1 \
     && security find-generic-password \
       -s "${GITLAB_KEYCHAIN_SERVICE}" \

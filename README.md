@@ -24,7 +24,7 @@ user or corporate configuration.
   - `playwright` for repeatable browser automation and UI tests;
   - `chrome-devtools` for inspecting an existing Chrome session;
   - `computer-use` for Codex Desktop when its local client is available;
-  - `slack` for read-only Slack access after supplying a user token;
+  - `slack` for read-only Slack access using a token stored in macOS Keychain;
   - `gitlab` for read-only access to projects visible on internal GitLab;
   - `atlassian` for Jira and Confluence through Atlassian Rovo MCP after OAuth;
   - `vimeo` for transcripts, video metadata, and analytics after OAuth login;
@@ -95,8 +95,8 @@ preserves project trust levels, Codex MCP servers, marketplaces, plugins,
 feature flags, shell policy, and the corporate Neuronet instruction block. It
 also copies supporting files referenced by shared skills, installs the shared
 `.context/`, existing-browser, and Jira visibility rules, and registers Codex
-Desktop's `computer-use` MCP when available, plus the hosted Slack and Vimeo
-MCP endpoints without storing credentials in `~/.codex/config.toml`.
+Desktop's `computer-use` MCP when available, plus Slack and Vimeo MCP access
+without storing credentials in `~/.codex/config.toml`.
 
 Both installers add the internal `xsolla-ai-infra` marketplace and install
 `xsolla-service-desk@xsolla-ai-infra` when `gitlab.loc` is reachable. Failure to
@@ -108,7 +108,7 @@ Confluence. See the
 
 Slack needs a separately created user token before it can be used. Follow the
 [Slack MCP setup guide](docs/slack-mcp.md) to create a least-privilege
-read-only token and make it available to Codex Desktop.
+read-only token and store it in macOS Keychain for both clients.
 
 Internal GitLab access uses a dedicated `read_api` personal access token stored
 in macOS Keychain. The installers expose GitLab's read-only MCP toolset to both
@@ -134,9 +134,9 @@ codex plugin list
 
 The defaults should include `playwright`, `chrome-devtools`, `gitlab`,
 `atlassian`, and `vimeo` in both clients, plus `computer-use` in Codex when
-Codex Desktop provides the local client and `slack` in Codex. Atlassian and
+Codex Desktop provides the local client. Atlassian and
 Vimeo require a one-time OAuth login in each client. Slack becomes operational after
-`SLACK_MCP_TOKEN` is configured as described in the
+its Keychain token is configured as described in the
 [Slack MCP setup guide](docs/slack-mcp.md).
 The plugin lists should also contain
 `xsolla-service-desk@xsolla-ai-infra` when internal GitLab access is available.

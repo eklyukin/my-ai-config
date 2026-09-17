@@ -43,7 +43,8 @@ preserve configuration outside the repository's explicit ownership boundary.
    The expected browser set is `playwright` and `chrome-devtools` for both
    clients; both clients also receive read-only GitLab plus the hosted Atlassian
    Rovo and Vimeo MCP endpoints. Codex additionally receives `computer-use`
-   when available and the hosted Slack MCP endpoint without embedding tokens.
+   when available. Both clients load Slack and GitLab tokens from macOS
+   Keychain without embedding them in client configuration.
 
 ## Ownership boundary
 
@@ -52,7 +53,7 @@ This repository may create, replace, or remove only:
 - Claude symlinks recorded in `~/.claude/.my-ai-config-manifest` and pointing
   into this repository;
 - Claude hook command registrations explicitly listed in `HOOK_EVENTS`;
-- user-scoped Claude MCP entries named `playwright`, `chrome-devtools`,
+- user-scoped Claude MCP entries named `playwright`, `chrome-devtools`, `slack`,
   `gitlab`, `atlassian`, and `vimeo`;
 - the marked `my-ai-config-local-context`, `my-ai-config-browser`, and
   `my-ai-config-jira-workflow` blocks in `~/AGENTS.md`;

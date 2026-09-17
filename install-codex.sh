@@ -26,8 +26,9 @@ LOCAL_CONTEXT_RULE="${CLAUDE_HOME}/rules/local-context.md"
 BROWSER_RULE="${CLAUDE_HOME}/rules/existing-browser.md"
 JIRA_WORKFLOW_RULE="${CLAUDE_HOME}/rules/jira-workflow.md"
 COMPUTER_USE_CLIENT="${CODEX_HOME}/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
-SLACK_MCP_URL="https://mcp.slack.com/mcp"
-SLACK_MCP_TOKEN_ENV="SLACK_MCP_TOKEN"
+SLACK_KEYCHAIN_SERVICE="my-ai-config.slack"
+SLACK_KEYCHAIN_ACCOUNT="SLACK_MCP_XOXP_TOKEN"
+SLACK_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.slack" -a "SLACK_MCP_XOXP_TOKEN" -w 2>/dev/null)" || { echo "Slack token is missing from macOS Keychain" >&2; exit 1; }; exec env SLACK_MCP_XOXP_TOKEN="$token" SLACK_MCP_ENABLED_TOOLS="channels_list,channels_me,conversations_history,conversations_replies,conversations_search_messages,conversations_unreads,usergroups_list,usergroups_me,users_search" npx -y slack-mcp-server@latest'
 VIMEO_MCP_URL="https://mcp.vimeo.com/mcp"
 ATLASSIAN_MCP_URL="https://mcp.atlassian.com/v2/mcp"
 GITLAB_KEYCHAIN_SERVICE="my-ai-config.gitlab"
@@ -344,13 +345,19 @@ else
   echo "WARN: Codex Desktop computer-use client not found — skipping global computer-use MCP" >&2
 fi
 
-# Register Slack's hosted MCP endpoint without storing credentials in
-# config.toml. The user supplies a read-only xoxp token through the named
-# environment variable; see docs/slack-mcp.md for the OAuth and desktop setup.
-codex mcp remove slack >/dev/null 2>&1 || true
-codex mcp add slack \
-  --url "${SLACK_MCP_URL}" \
-  --bearer-token-env-var "${SLACK_MCP_TOKEN_ENV}"
+# Load the Slack user token from macOS Keychain only when the MCP process
+# starts. The app token has read-only scopes, and the explicit tool allowlist
+# excludes posting, reactions, membership changes, user-group writes, and
+# mark-as-read operations independently of Slack's token enforcement.
+if command -v security >/dev/null 2>&1 \
+  && security find-generic-password \
+    -s "${SLACK_KEYCHAIN_SERVICE}" \
+    -a "${SLACK_KEYCHAIN_ACCOUNT}" >/dev/null 2>&1; then
+  codex mcp remove slack >/dev/null 2>&1 || true
+  codex mcp add slack -- /bin/zsh -lc "${SLACK_MCP_LAUNCHER}"
+else
+  echo "NOTICE: Slack MCP requires a read-only token in macOS Keychain; follow ${REPO_DIR}/docs/slack-mcp.md" >&2
+fi
 
 # Load the GitLab PAT from macOS Keychain only when the MCP process starts.
 # The token has read_api scope and the server independently exposes only its
@@ -383,13 +390,6 @@ if codex mcp get vimeo 2>/dev/null | grep -qF "url: ${VIMEO_MCP_URL}"; then
 else
   codex mcp remove vimeo >/dev/null 2>&1 || true
   codex mcp add vimeo --url "${VIMEO_MCP_URL}"
-fi
-
-if command -v launchctl >/dev/null 2>&1 \
-  && [ -n "$(launchctl getenv "${SLACK_MCP_TOKEN_ENV}")" ]; then
-  echo "configured: Slack MCP (${SLACK_MCP_TOKEN_ENV} is available to desktop apps)"
-else
-  echo "NOTICE: Slack MCP requires ${SLACK_MCP_TOKEN_ENV}; follow ${REPO_DIR}/docs/slack-mcp.md" >&2
 fi
 
 # Install the optional internal Service Desk plugin after migration and repair.

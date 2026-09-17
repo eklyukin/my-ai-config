@@ -1,14 +1,8 @@
-# Slack MCP for Codex Desktop
+# Slack MCP setup
 
-`install-codex.sh` registers Slack's hosted MCP endpoint globally:
-
-```text
-https://mcp.slack.com/mcp
-```
-
-The configuration references `SLACK_MCP_TOKEN`; it never writes the token to
-this repository or `~/.codex/config.toml`. Complete the steps below once after
-installation.
+The installers register a read-only Slack MCP globally for Claude Code and
+Codex. Its user token is retrieved from macOS Keychain when each MCP process
+starts; it is never written to this repository or either client's config.
 
 ## 1. Create an internal Slack app
 
@@ -95,49 +89,54 @@ canvases:read channels:history channels:read emoji:read files:read groups:histor
 Select **Get New Access Token**, approve the workspace consent screen, and
 then select **Use Token**. The resulting user token starts with `xoxp-`.
 
-## 5. Make the token available to Codex Desktop
+## 5. Save the token in macOS Keychain
 
 Run the following in a separate terminal. Paste the `xoxp` token at the hidden
 prompt; it must never be pasted into an AI chat:
 
 ```bash
 printf "Paste the Slack xoxp token: " && read -s SLACK_SECRET && echo
-launchctl setenv SLACK_MCP_TOKEN "$SLACK_SECRET"
+security add-generic-password -U \
+  -s "my-ai-config.slack" \
+  -a "SLACK_MCP_XOXP_TOKEN" \
+  -w "$SLACK_SECRET"
 unset SLACK_SECRET
 
-if [[ -n "$(launchctl getenv SLACK_MCP_TOKEN)" ]]; then
-  echo "Slack token is configured"
-else
-  echo "Slack token was not configured"
-fi
+security find-generic-password \
+  -s "my-ai-config.slack" \
+  -a "SLACK_MCP_XOXP_TOKEN" >/dev/null \
+  && echo "Slack token is configured"
 ```
 
-Completely quit Codex Desktop with **Cmd-Q**, then reopen it so the app inherits
-the variable. The `launchctl` value belongs to the current macOS login session;
-repeat this step after signing out or restarting macOS.
+Run `bash install.sh` and `bash install-codex.sh`, then completely quit and
+reopen both desktop applications. Keychain persists across reboots, so this
+step does not need to be repeated after restarting macOS.
 
-On a non-macOS desktop session, set `SLACK_MCP_TOKEN` in the environment that
-launches Codex.
+The Keychain integration is macOS-specific. Other platforms require an
+equivalent local secret-store launcher before these installer entries can be
+used.
 
 ## 6. Verify
 
-Confirm that the endpoint is registered:
+Confirm that the stdio server is registered:
 
 ```bash
+claude mcp get slack
 codex mcp get slack
 ```
 
-The output should show:
+Both entries should use `/bin/zsh -lc` to retrieve the token and start
+`slack-mcp-server`. The token itself must not appear in either config.
 
-```text
-transport: streamable_http
-url: https://mcp.slack.com/mcp
-bearer_token_env_var: SLACK_MCP_TOKEN
-```
+The installer also supplies an explicit `SLACK_MCP_ENABLED_TOOLS` allowlist.
+Only channel/user discovery, history, thread replies, search, unread retrieval,
+and user-group reads are exposed. Posting, reactions, membership changes,
+mark-as-read, and user-group writes remain unavailable even if future token
+permissions are broadened accidentally.
 
-After restarting Codex Desktop, ask it to read one accessible Slack channel or
-direct message. A read-only setup exposes Slack read/search tools but no tools
-for sending, editing, reacting, uploading, or deleting content.
+After restarting the clients, ask either one to read an accessible Slack
+channel or direct message. A read-only setup exposes Slack read/search tools
+but no tools for sending, editing, reacting, uploading, or deleting content.
 
 ## Troubleshooting
 
@@ -145,8 +144,8 @@ for sending, editing, reacting, uploading, or deleting content.
   Redirect URL exactly `https://oauth.pstmn.io/v1/callback`.
 - Postman OAuth timeout: turn **Authorize using browser** off and begin a new
   OAuth request; authorization codes cannot be reused.
-- Slack tools are absent after setting the token: quit Codex Desktop with
-  **Cmd-Q** and reopen it.
+- Slack tools are absent after setting the token: rerun both installers, quit
+  the desktop clients with **Cmd-Q**, and reopen them.
 - Access is denied for specific content: verify that the authorizing Slack user
   can access that conversation and that the corresponding read scope was
   approved.
