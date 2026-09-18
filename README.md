@@ -29,6 +29,8 @@ user or corporate configuration.
   - `computer-use` for Codex Desktop when its local client is available;
   - `slack` for read-only Slack access using a token stored in macOS Keychain;
   - `gitlab` for read-only access to projects visible on internal GitLab;
+  - `datadog` for authenticated access to the Xsolla US5 Datadog MCP, with
+    credentials loaded from macOS Keychain;
   - `atlassian` for Jira and Confluence through Atlassian Rovo MCP after OAuth;
   - `vimeo` for transcripts, video metadata, and analytics after OAuth login;
 - the `.context/` convention for conflict-free, repository-local personal
@@ -136,11 +138,13 @@ codex plugin list
 ```
 
 The defaults should include `playwright`, `chrome-devtools`, `gitlab`,
-`atlassian`, and `vimeo` in both clients, plus `computer-use` in Codex when
+`datadog`, `atlassian`, and `vimeo` in both clients, plus `computer-use` in Codex when
 Codex Desktop provides the local client. Atlassian and
 Vimeo require a one-time OAuth login in each client. Slack becomes operational after
 its Keychain token is configured as described in the
 [Slack MCP setup guide](docs/slack-mcp.md).
+Datadog becomes operational after its two service-account keys are stored as
+described in the [Datadog MCP setup guide](docs/datadog-mcp.md).
 The plugin lists should also contain
 `xsolla-service-desk@xsolla-ai-infra` when internal GitLab access is available.
 

@@ -26,6 +26,10 @@ SLACK_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.sla
 GITLAB_KEYCHAIN_SERVICE="my-ai-config.gitlab"
 GITLAB_KEYCHAIN_ACCOUNT="GITLAB_PERSONAL_ACCESS_TOKEN"
 GITLAB_MCP_LAUNCHER='token="$(security find-generic-password -s "my-ai-config.gitlab" -a "GITLAB_PERSONAL_ACCESS_TOKEN" -w 2>/dev/null)" || { echo "GitLab token is missing from macOS Keychain" >&2; exit 1; }; exec env GITLAB_PERSONAL_ACCESS_TOKEN="$token" GITLAB_API_URL="https://gitlab.loc/api/v4" GITLAB_PERMISSION_MODE="readonly" npx -y @zereight/mcp-gitlab@latest'
+DATADOG_KEYCHAIN_SERVICE="my-ai-config.datadog"
+DATADOG_API_KEY_ACCOUNT="DD_API_KEY"
+DATADOG_APPLICATION_KEY_ACCOUNT="DD_APPLICATION_KEY"
+DATADOG_MCP_LAUNCHER='api_key="$(security find-generic-password -s "my-ai-config.datadog" -a "DD_API_KEY" -w 2>/dev/null)" || { echo "Datadog API key is missing from macOS Keychain" >&2; exit 1; }; application_key="$(security find-generic-password -s "my-ai-config.datadog" -a "DD_APPLICATION_KEY" -w 2>/dev/null)" || { echo "Datadog application key is missing from macOS Keychain" >&2; exit 1; }; exec env DD_API_KEY="$api_key" DD_APPLICATION_KEY="$application_key" npx -y mcp-remote@latest "https://mcp.us5.datadoghq.com/v1/mcp" --header "DD_API_KEY:\${DD_API_KEY}" --header "DD_APPLICATION_KEY:\${DD_APPLICATION_KEY}"'
 SERVICE_DESK_MARKETPLACE_URL="https://gitlab.loc/new-metasites/ai-infra.git"
 SERVICE_DESK_MARKETPLACE="xsolla-ai-infra"
 SERVICE_DESK_PLUGIN="xsolla-service-desk"
@@ -123,6 +127,17 @@ if command -v claude >/dev/null 2>&1; then
     install_global_mcp gitlab /bin/zsh -lc "${GITLAB_MCP_LAUNCHER}"
   else
     echo "NOTICE: GitLab MCP requires a read-only token in macOS Keychain; follow ${REPO_DIR}/docs/gitlab-mcp.md" >&2
+  fi
+  if command -v security >/dev/null 2>&1 \
+    && security find-generic-password -s "${DATADOG_KEYCHAIN_SERVICE}" -a "${DATADOG_API_KEY_ACCOUNT}" >/dev/null 2>&1 \
+    && security find-generic-password -s "${DATADOG_KEYCHAIN_SERVICE}" -a "${DATADOG_APPLICATION_KEY_ACCOUNT}" >/dev/null 2>&1; then
+    claude mcp remove --scope user datadog >/dev/null 2>&1 || true
+    claude mcp add --scope user datadog \
+      -e DD_API_KEY=keychain \
+      -e DD_APPLICATION_KEY=keychain \
+      -- /bin/zsh -lc "${DATADOG_MCP_LAUNCHER}"
+  else
+    echo "NOTICE: Datadog MCP requires API and application keys in macOS Keychain; follow ${REPO_DIR}/docs/datadog-mcp.md" >&2
   fi
   if claude mcp get atlassian 2>/dev/null | grep -qF "URL: ${ATLASSIAN_MCP_URL}"; then
     echo "unchanged: Atlassian MCP (${ATLASSIAN_MCP_URL})"
