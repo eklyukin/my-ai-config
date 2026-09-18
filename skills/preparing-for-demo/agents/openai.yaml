@@ -1,0 +1,4 @@
+interface:
+  display_name: "Preparing for Demo"
+  short_description: "Publish a private, verified fortnight report in Confluence"
+  default_prompt: "Prepare my verified 14-day work and code-review report and publish it privately in my configured Confluence folder."

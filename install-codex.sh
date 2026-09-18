@@ -149,11 +149,14 @@ PYEOF
 # Remove Codex skill directories generated from repository-managed Claude
 # skills that were intentionally renamed. The migrator runs in merge mode and
 # otherwise leaves these orphaned generated targets behind.
-legacy_skill="${HOME}/.agents/skills/claude-md-refactor"
-if [ -d "${legacy_skill}" ] && [ ! -e "${CLAUDE_HOME}/skills/claude-md-refactor" ]; then
-  rm -rf -- "${legacy_skill}"
-  echo "removed renamed Codex skill: ${legacy_skill}"
-fi
+legacy_skills=(claude-md-refactor fortnight-work-report)
+for legacy_name in "${legacy_skills[@]}"; do
+  legacy_skill="${HOME}/.agents/skills/${legacy_name}"
+  if [ -d "${legacy_skill}" ] && [ ! -e "${CLAUDE_HOME}/skills/${legacy_name}" ]; then
+    rm -rf -- "${legacy_skill}"
+    echo "removed renamed Codex skill: ${legacy_skill}"
+  fi
+done
 
 # --- repair AGENTS.md: restore the cross-agent-managed neo4j block verbatim ---
 if [ -s "${neo4j_block_snapshot}" ] && [ -f "${AGENTS_MD}" ]; then

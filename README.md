@@ -16,6 +16,9 @@ user or corporate configuration.
   branches without performing unreviewed remote writes;
 - a Slack work-update skill that drafts or polishes copy-ready progress updates
   without posting them;
+- a preparing-for-demo skill that reconciles the user's verified Jira, GitHub,
+  GitLab, and code-review activity over a rolling 14-day period and publishes a
+  private report in the configured personal Confluence folder;
 - the optional internal Xsolla Service Desk plugin for reading and submitting
   Jira Service Management customer requests through Claude Code and Codex;
 - Claude Code commands, agents, and lifecycle hooks;
